@@ -1,0 +1,19 @@
+{
+  "name": "NeedleFinder - Anomaly Explorer",
+  "short_name": "NeedleFinder",
+  "description": "Advanced anomaly detection and analysis dashboard",
+  "theme_color": "#6366f1",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
