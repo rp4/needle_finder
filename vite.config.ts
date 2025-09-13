@@ -9,22 +9,22 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'farm-assets/*.svg'],
+      includeAssets: ['favicon.ico'],
       manifest: {
-        name: 'NeedleFinder - Audit Anomaly Explorer',
-        short_name: 'NeedleFinder',
-        description: 'Find the needle in the haystack - Farm-themed audit anomaly visualization',
-        theme_color: '#8B0000',
-        background_color: '#FAF0DC',
+        name: 'Anomaly Explorer - Internal Audit Dashboard',
+        short_name: 'Anomaly Explorer',
+        description: 'Internal Audit Dashboard for advanced anomaly detection and analysis',
+        theme_color: '#6366f1',
+        background_color: '#111827',
         display: 'standalone',
         icons: [
           {
-            src: 'farm-icon-192.png',
+            src: 'icon-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
           {
-            src: 'farm-icon-512.png',
+            src: 'icon-512.png',
             sizes: '512x512',
             type: 'image/png'
           }
