@@ -5,49 +5,51 @@ export interface ValidationResult {
   errors: string[];
 }
 
-export function validateDataset(data: any): ValidationResult {
+export function validateDataset(data: unknown): ValidationResult {
   const errors: string[] = [];
 
   // Check if data is an object
-  if (!data || typeof data !== 'object') {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
     return { valid: false, errors: ['Invalid data format: expected JSON object'] };
   }
+
+  const dataset = data as Record<string, any>;
 
   // Required top-level fields
   const requiredFields = ['run_id', 'dataset_profile', 'anomalies'];
   for (const field of requiredFields) {
-    if (!(field in data)) {
+    if (!(field in dataset)) {
       errors.push(`Missing required field: ${field}`);
     }
   }
 
   // Validate dataset_profile
-  if (data.dataset_profile) {
+  if (dataset.dataset_profile) {
     const profileFields = ['rows', 'columns', 'primary_keys', 'entity_keys', 'time_key', 'currency'];
     for (const field of profileFields) {
-      if (!(field in data.dataset_profile)) {
+      if (!(field in dataset.dataset_profile)) {
         errors.push(`Missing dataset_profile.${field}`);
       }
     }
     
-    if (typeof data.dataset_profile.rows !== 'number' || data.dataset_profile.rows < 0) {
+    if (typeof dataset.dataset_profile.rows !== 'number' || dataset.dataset_profile.rows < 0) {
       errors.push('dataset_profile.rows must be a non-negative number');
     }
     
-    if (typeof data.dataset_profile.columns !== 'number' || data.dataset_profile.columns < 0) {
+    if (typeof dataset.dataset_profile.columns !== 'number' || dataset.dataset_profile.columns < 0) {
       errors.push('dataset_profile.columns must be a non-negative number');
     }
   }
 
   // Validate anomalies array
-  if (data.anomalies) {
-    if (!Array.isArray(data.anomalies)) {
+  if (dataset.anomalies) {
+    if (!Array.isArray(dataset.anomalies)) {
       errors.push('anomalies must be an array');
     } else {
       // Check first 10 anomalies for structure
-      const sampleSize = Math.min(10, data.anomalies.length);
+      const sampleSize = Math.min(10, dataset.anomalies.length);
       for (let i = 0; i < sampleSize; i++) {
-        const anomaly = data.anomalies[i];
+        const anomaly = dataset.anomalies[i];
         
         if (!anomaly.id) {
           errors.push(`Anomaly at index ${i} missing required field: id`);
@@ -77,17 +79,17 @@ export function validateDataset(data: any): ValidationResult {
   }
 
   // Validate groups if present
-  if (data.groups && !Array.isArray(data.groups)) {
+  if (dataset.groups && !Array.isArray(dataset.groups)) {
     errors.push('groups must be an array if present');
   }
 
   // Validate timeseries if present
-  if (data.timeseries && !Array.isArray(data.timeseries)) {
+  if (dataset.timeseries && !Array.isArray(dataset.timeseries)) {
     errors.push('timeseries must be an array if present');
   }
 
   // Validate data_quality if present
-  if (data.data_quality && !Array.isArray(data.data_quality)) {
+  if (dataset.data_quality && !Array.isArray(dataset.data_quality)) {
     errors.push('data_quality must be an array if present');
   }
 

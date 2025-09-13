@@ -3,11 +3,13 @@ import { Upload, TrendingUp, AlertTriangle, CheckCircle, BarChart2, Sparkles, Ch
 import { useAnomalyStore } from '@stores/anomalyStore';
 import { processDataFile } from '@services/data/fileProcessor';
 import { generateMockData } from '@services/data/generateMockData';
+import type { Anomaly } from '@/types/anomaly.types';
+import { logger } from '@services/logger';
 
 export function Dashboard() {
   const { dataset, hasData, loadDataset, getFilteredAnomalies } = useAnomalyStore();
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedAnomaly, setSelectedAnomaly] = useState<any>(null);
+  const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null);
   const [reviewedAnomalies, setReviewedAnomalies] = useState<{[key: string]: 'confirmed' | 'rejected'}>({});
 
   const anomalies = getFilteredAnomalies();
@@ -33,7 +35,7 @@ export function Dashboard() {
       const result = await processDataFile(file);
       loadDataset(result);
     } catch (err) {
-      console.error('Error processing file:', err);
+      logger.error('Error processing file', err as Error);
     }
   };
 
@@ -325,7 +327,7 @@ export function Dashboard() {
                   <div className="space-y-1">
                     {Object.entries(selectedAnomaly.features)
                       .slice(0, 5)
-                      .map(([key, value]: [string, any]) => (
+                      .map(([key, value]) => (
                         <div key={key} className="flex justify-between items-center">
                           <span className="text-xs text-gray-600">{key}</span>
                           <span className="text-xs font-medium text-indigo-400">

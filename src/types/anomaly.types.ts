@@ -70,6 +70,7 @@ export interface Anomaly {
   explanations?: AnomalyExplanations;
   links?: AnomalyLinks;
   case?: AnomalyCase;
+  features?: Record<string, string | number | boolean>;
 }
 
 export interface GroupAnomaly {
@@ -110,7 +111,7 @@ export interface ClusterMember {
 
 export interface Clusters {
   algo: string;
-  params: Record<string, any>;
+  params: Record<string, string | number | boolean>;
   tree?: string;
   members: ClusterMember[];
 }

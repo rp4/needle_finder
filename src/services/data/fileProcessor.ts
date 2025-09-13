@@ -1,7 +1,14 @@
 import pako from 'pako';
 import type { AnomalyDataset } from '@/types/anomaly.types';
+import { AnomalyDatasetSchema, FileUploadSchema } from './schemas';
 
 export async function processDataFile(file: File): Promise<AnomalyDataset> {
+  // Validate file
+  const fileValidation = FileUploadSchema.safeParse({ file });
+  if (!fileValidation.success) {
+    throw new Error(`Invalid file: ${fileValidation.error.errors[0].message}`);
+  }
+
   const isGzipped = file.name.endsWith('.gz') || file.type === 'application/gzip';
   
   try {
@@ -25,6 +32,13 @@ export async function processDataFile(file: File): Promise<AnomalyDataset> {
     
     // Parse JSON
     const data = JSON.parse(jsonString);
+
+    // Validate data structure
+    const dataValidation = AnomalyDatasetSchema.safeParse(data);
+    if (!dataValidation.success) {
+      const firstError = dataValidation.error.errors[0];
+      throw new Error(`Invalid dataset format: ${firstError.path.join('.')} - ${firstError.message}`);
+    }
     
     // Process in a web worker for large files
     if (jsonString.length > 10 * 1024 * 1024) { // > 10MB
@@ -45,10 +59,10 @@ export async function processDataFile(file: File): Promise<AnomalyDataset> {
   }
 }
 
-function processDataset(data: any): AnomalyDataset {
+function processDataset(data: AnomalyDataset): AnomalyDataset {
   // Ensure all dates are properly formatted
   if (data.anomalies) {
-    data.anomalies = data.anomalies.map((anomaly: any) => ({
+    data.anomalies = data.anomalies.map((anomaly) => ({
       ...anomaly,
       timestamp: new Date(anomaly.timestamp).toISOString()
     }));
@@ -56,20 +70,20 @@ function processDataset(data: any): AnomalyDataset {
   
   // Sort anomalies by unified score (highest first)
   if (data.anomalies) {
-    data.anomalies.sort((a: any, b: any) => b.unified_score - a.unified_score);
+    data.anomalies.sort((a, b) => b.unified_score - a.unified_score);
   }
   
   // Index anomalies for fast lookup
   if (data.anomalies) {
     data._index = new Map(
-      data.anomalies.map((a: any, idx: number) => [a.id, idx])
+      data.anomalies.map((a, idx) => [a.id, idx])
     );
   }
   
   return data as AnomalyDataset;
 }
 
-async function processInWorker(data: any): Promise<AnomalyDataset> {
+async function processInWorker(data: AnomalyDataset): Promise<AnomalyDataset> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(
       new URL('./dataWorker.ts', import.meta.url),
