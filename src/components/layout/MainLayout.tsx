@@ -7,9 +7,22 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      {/* Header */}
-      <header className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700">
+    <div
+      className="min-h-screen relative"
+      style={{
+        backgroundImage: 'url(/Haystack.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Background overlay for better readability */}
+      <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm" />
+
+      {/* Content wrapper */}
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
@@ -30,10 +43,11 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
+        {/* Main Content */}
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
