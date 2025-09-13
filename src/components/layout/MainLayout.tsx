@@ -16,19 +16,19 @@ export function MainLayout({ children }: MainLayoutProps) {
         backgroundAttachment: 'fixed'
       }}
     >
-      {/* Background overlay for better readability */}
-      <div className="absolute inset-0 bg-gray-900/75 backdrop-blur-sm" />
+      {/* Background overlay for better readability - light mode */}
+      <div className="absolute inset-0 bg-white/30" />
 
       {/* Content wrapper */}
       <div className="relative z-10">
-        {/* Header */}
-        <header className="bg-gray-900/80 backdrop-blur-lg border-b border-gray-700">
+        {/* Header - glassmorphism light mode */}
+        <header className="bg-white/50 backdrop-blur-sm border-b border-gray-200/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <div className="flex items-center space-x-3">
                 <span className="text-2xl">🪡</span>
-                <h1 className="text-xl font-semibold text-gray-100">
+                <h1 className="text-xl font-semibold text-gray-800">
                   Needle Finder
                 </h1>
               </div>
