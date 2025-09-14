@@ -1,11 +1,14 @@
 import { ReactNode } from 'react';
 import { Download } from 'lucide-react';
+import { useAnomalyStore } from '@stores/anomalyStore';
 
 interface MainLayoutProps {
   children: ReactNode;
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
+  const { hasData } = useAnomalyStore();
+
   return (
     <div
       className="min-h-screen relative"
@@ -34,11 +37,13 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </div>
 
-            {/* Export Button */}
-            <button className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all">
-              <Download className="w-4 h-4" />
-              <span className="text-sm font-medium">Export</span>
-            </button>
+            {/* Export Button - Only show when data is loaded */}
+            {hasData && (
+              <button className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all">
+                <Download className="w-4 h-4" />
+                <span className="text-sm font-medium">Export</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
