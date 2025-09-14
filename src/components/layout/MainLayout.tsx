@@ -7,7 +7,45 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { hasData } = useAnomalyStore();
+  const { hasData, getFilteredAnomalies, dataset } = useAnomalyStore();
+
+  const handleExport = () => {
+    const anomalies = getFilteredAnomalies();
+
+    // Create export data with current reviewed states
+    const exportData = {
+      timestamp: new Date().toISOString(),
+      datasetName: dataset?.name || 'unknown',
+      totalRecords: dataset?.totalRecords || 0,
+      totalAnomalies: anomalies.length,
+      reviewedCount: anomalies.filter(a => a.reviewed).length,
+      anomalies: anomalies.map(anomaly => ({
+        id: anomaly.id,
+        recordIndex: anomaly.recordIndex,
+        severity: anomaly.severity,
+        anomaly_types: anomaly.anomaly_types,
+        features: anomaly.features,
+        timestamp: anomaly.timestamp,
+        reviewed: anomaly.reviewed || false
+      }))
+    };
+
+    // Convert to JSON and create blob
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+
+    // Create download link and trigger download
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `anomalies_export_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+
+    // Cleanup
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div
@@ -39,7 +77,10 @@ export function MainLayout({ children }: MainLayoutProps) {
 
             {/* Export Button - Only show when data is loaded */}
             {hasData && (
-              <button className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all">
+              <button
+                onClick={handleExport}
+                className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all"
+              >
                 <Download className="w-4 h-4" />
                 <span className="text-sm font-medium">Export</span>
               </button>
