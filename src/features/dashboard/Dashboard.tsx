@@ -175,14 +175,14 @@ export function Dashboard() {
       {/* Anomaly Table and Details */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Anomaly Table */}
-        <div className="bg-white/70 backdrop-blur-xs border border-gray-200 rounded-xl overflow-hidden shadow-lg">
+        <div className="bg-white/90 backdrop-blur-xs border border-gray-200 rounded-xl overflow-hidden shadow-lg">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800">Anomalies</h3>
           </div>
           <div className="overflow-x-auto max-h-96">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-100/60 border-b border-gray-200">
+                <tr className="bg-gray-50/80 border-b border-gray-200">
                   <th className="px-4 py-2 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     ID
                   </th>
@@ -204,15 +204,15 @@ export function Dashboard() {
                 {sortedAnomalies.slice(0, 10).map((anomaly) => (
                   <tr
                     key={anomaly.id}
-                    className={`hover:bg-gray-100/60 transition-colors cursor-pointer ${
-                      selectedAnomaly?.id === anomaly.id ? 'bg-indigo-50' : ''
+                    className={`hover:bg-gray-50/90 transition-colors cursor-pointer ${
+                      selectedAnomaly?.id === anomaly.id ? 'bg-indigo-50/90' : 'bg-white/80'
                     } ${reviewedAnomalies[anomaly.id] === 'rejected' ? 'opacity-50' : ''}`}
                     onClick={() => setSelectedAnomaly(anomaly)}
                   >
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 font-medium">
                       {anomaly.id.slice(0, 8)}...
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
                       {anomaly.anomaly_types?.[0] || 'Unknown'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -228,7 +228,7 @@ export function Dashboard() {
                         {anomaly.severity > 0.7 ? 'HIGH' : anomaly.severity > 0.4 ? 'MED' : 'LOW'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 font-semibold">
                       {anomaly.unified_score.toFixed(3)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
