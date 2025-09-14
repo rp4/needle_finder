@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAnomalyStore } from '@stores/anomalyStore';
 import { validateDataset } from '@services/data/validation';
 import { processDataFile } from '@services/data/fileProcessor';
-import { generateMockDataset } from '@services/data/mockDataGenerator';
+import { generateMockDatasetAsAnomalyDataset } from '@services/data/mockDataGenerator';
 import clsx from 'clsx';
 
 interface FarmsteadProps {
@@ -67,7 +67,7 @@ export function Farmstead({ onDataLoad }: FarmsteadProps) {
     // Simulate loading delay for better UX
     setTimeout(() => {
       try {
-        const mockData = generateMockDataset();
+        const mockData = generateMockDatasetAsAnomalyDataset();
         loadDataset(mockData);
         onDataLoad();
         

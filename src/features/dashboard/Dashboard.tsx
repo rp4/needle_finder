@@ -171,7 +171,6 @@ export function Dashboard() {
                 onClick={loadMockData}
                 className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all"
               >
-                <Sparkles className="w-5 h-5" />
                 Load Sample Data
               </button>
             </div>

@@ -12,21 +12,22 @@ export function MainLayout({ children }: MainLayoutProps) {
   const handleExport = () => {
     const anomalies = getFilteredAnomalies();
 
-    // Create export data with current reviewed states
+    // Create export data in simplified format that matches import schema
     const exportData = {
-      timestamp: new Date().toISOString(),
-      datasetName: dataset?.name || 'unknown',
-      totalRecords: dataset?.totalRecords || 0,
-      totalAnomalies: anomalies.length,
-      reviewedCount: anomalies.filter(a => a.reviewed).length,
+      total_records: dataset?.dataset_profile?.rows || 50000,
+      anomalies_detected: anomalies.length,
       anomalies: anomalies.map(anomaly => ({
         id: anomaly.id,
-        recordIndex: anomaly.recordIndex,
-        severity: anomaly.severity,
-        anomaly_types: anomaly.anomaly_types,
-        features: anomaly.features,
-        timestamp: anomaly.timestamp,
-        reviewed: anomaly.reviewed || false
+        category: anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
+          .replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown Anomaly',
+        severity: anomaly.severity > 0.8 ? 'high' : anomaly.severity > 0.5 ? 'medium' : 'low',
+        anomaly_score: Number(anomaly.unified_score.toFixed(3)),
+        detection_method: anomaly.case?.tags?.find(tag =>
+          ['Isolation Forest', 'Local Outlier Factor', 'One-Class SVM', 'DBSCAN',
+           'Autoencoder', 'Statistical Z-Score', 'Time Series Decomposition', 'Ensemble Method']
+          .includes(tag)
+        ) || 'Ensemble Method',
+        ai_explanation: anomaly.reason_codes?.[0]?.text || 'Anomaly detected based on statistical analysis'
       }))
     };
 
