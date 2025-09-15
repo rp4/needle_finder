@@ -1,4 +1,4 @@
-// Complete sample CSV data for demonstration - 250 anomalies with custom fields
+// Complete sample CSV data for demonstration
 export const SAMPLE_CSV_DATA = `id,category,severity,anomaly_score,detection_method,ai_explanation,transaction_amount,customer_id,merchant,location,timestamp,risk_flags
 ANM-000001,"Unusual Transaction Pattern",high,0.923,"Isolation Forest","Transaction amount exceeds historical average by 5x standard deviations",15234.50,CUST-4521,MerchantXYZ,"New York, NY",2024-01-14T10:30:00Z,velocity_check
 ANM-000002,"Duplicate Transaction",high,0.891,"DBSCAN","Multiple identical transactions detected within 2-minute window",3500.00,CUST-8934,OnlineStore123,"Chicago, IL",2024-01-14T11:15:00Z,duplicate_flag
@@ -9,47 +9,46 @@ ANM-000006,"Merchant Risk",medium,0.756,"Local Outlier Factor","First transactio
 ANM-000007,"Amount Spike",medium,0.723,"Isolation Forest","Single transaction 3x larger than account limit",5600.00,CUST-5678,ElectronicsHub,"Seattle, WA",2024-01-14T14:15:00Z,overlimit
 ANM-000008,"Time Anomaly",medium,0.689,"Time Series Decomposition","Transaction at unusual hour for this account",280.75,CUST-1234,24HrStore,"Denver, CO",2024-01-14T03:45:00Z,odd_hour
 ANM-000009,"Behavioral Change",medium,0.654,"Autoencoder","Spending pattern deviates from established profile",1875.00,CUST-7890,SportingGoods,"Boston, MA",2024-01-14T15:00:00Z,profile_change
-ANM-000010,"Network Anomaly",medium,0.632,"DBSCAN","Account linked to known fraud network",450.00,CUST-4567,OnlineMarket,"Portland, OR",2024-01-14T16:30:00Z,network_flag
-ANM-000011,"Currency Mismatch",medium,0.598,"Statistical Z-Score","Foreign currency transaction in unexpected country",2100.00,CUST-8901,IntlMerchant,"London, UK",2024-01-14T17:00:00Z,currency_flag
-ANM-000012,"Device Fingerprint",medium,0.576,"Ensemble Method","Transaction from device with suspicious characteristics",625.50,CUST-2345,WebStore99,"Atlanta, GA",2024-01-14T18:15:00Z,device_risk
-ANM-000013,"Refund Abuse",low,0.543,"Local Outlier Factor","Unusual pattern of purchases and refunds",180.00,CUST-6780,RetailChain,"Dallas, TX",2024-01-14T19:00:00Z,refund_pattern
-ANM-000014,"Small Amount Test",low,0.512,"One-Class SVM","Multiple small transactions testing card validity",1.99,CUST-3457,TestMerchant,"San Francisco, CA",2024-01-14T20:30:00Z,card_testing
-ANM-000015,"Weekend Spike",low,0.489,"Time Series Decomposition","Unusual weekend activity for business account",3200.00,CUST-9013,B2BSupplier,"Minneapolis, MN",2024-01-13T10:00:00Z,weekend_anomaly
-ANM-000016,"IP Mismatch",low,0.467,"Isolation Forest","Transaction IP location doesn't match billing address",540.25,CUST-5679,OnlineService,"Philadelphia, PA",2024-01-14T21:00:00Z,ip_mismatch
-ANM-000017,"Dormant Account",low,0.445,"Statistical Z-Score","Transaction on previously inactive account",890.00,CUST-1235,LocalStore,"Detroit, MI",2024-01-14T22:15:00Z,dormant_active
-ANM-000018,"Round Amount",low,0.423,"DBSCAN","Suspicious pattern of round-number transactions",1000.00,CUST-7891,ATM_12345,"Phoenix, AZ",2024-01-14T23:00:00Z,round_amounts
-ANM-000019,"Category Jump",low,0.401,"Autoencoder","First-time purchase in unusual category",275.50,CUST-4568,PetSupplies,"San Diego, CA",2024-01-14T07:30:00Z,new_category
-ANM-000020,"Velocity Decline",low,0.389,"Ensemble Method","Multiple declined transactions followed by approval",150.00,CUST-8902,GroceryStore,"Tampa, FL",2024-01-14T06:45:00Z,decline_pattern
-ANM-000021,"Cross-Border",medium,0.678,"One-Class SVM","Unexpected international transaction",4500.00,CUST-2346,IntlEcommerce,"Toronto, CA",2024-01-14T05:00:00Z,international
-ANM-000022,"Account Cycling",high,0.845,"Local Outlier Factor","Rapid deposits and withdrawals pattern",12000.00,CUST-6781,BankTransfer,"Charlotte, NC",2024-01-14T04:30:00Z,cycling_flag
-ANM-000023,"Merchant Hopping",medium,0.623,"DBSCAN","Multiple merchants in short timeframe",780.00,CUST-3458,Various,"Nashville, TN",2024-01-14T03:15:00Z,merchant_velocity
-ANM-000024,"Age Mismatch",low,0.412,"Statistical Z-Score","Transaction pattern inconsistent with account age",220.00,CUST-9014,OnlineGaming,"Las Vegas, NV",2024-01-14T02:00:00Z,age_flag
-ANM-000025,"Holiday Anomaly",medium,0.698,"Time Series Decomposition","Unusual activity during holiday period",5800.00,CUST-5680,LuxuryRetail,"Orlando, FL",2024-01-13T12:00:00Z,holiday_spike
-ANM-000026,"Weekend Spike",low,0.287,"One-Class SVM","Merchant category flagged as high risk",19025.42,CUST-3797,GroceryStore,"Atlanta, GA",2024-01-18T11:31:00.000Z,refund_pattern
-ANM-000027,"Behavioral Change",high,0.751,"Statistical Z-Score","Transaction amount exceeds historical average by significant margin",9792.63,CUST-9340,OnlineStore123,"Philadelphia, PA",2024-01-14T23:13:00.000Z,weekend_anomaly
-ANM-000028,"Device Fingerprint",medium,0.562,"Isolation Forest","Transaction velocity exceeds normal thresholds",18156.74,CUST-2258,LuxuryGoods,"San Diego, CA",2024-01-20T18:54:00.000Z,refund_pattern
-ANM-000029,"Geographic Anomaly",low,0.147,"Time Series Decomposition","Multiple duplicate entries found within same time window",18718.61,CUST-3043,OnlineStore123,"Seattle, WA",2024-01-20T09:13:00.000Z,duplicate_flag
-ANM-000030,"Merchant Risk",low,0.216,"Time Series Decomposition","Account behavior inconsistent with established profile",10078.39,CUST-8016,LocalStore,"Denver, CO",2024-01-20T22:20:00.000Z,device_risk
-ANM-000031,"Network Anomaly",medium,0.526,"One-Class SVM","Unexpected spike detected outside of seasonal norms",14847.03,CUST-5717,LocalStore,"Dallas, TX",2024-01-18T00:31:00.000Z,network_flag
-ANM-000032,"Duplicate Transaction",low,0.269,"Ensemble Method","Network analysis reveals suspicious connections",671.48,CUST-8411,LuxuryGoods,"Austin, TX",2024-01-19T01:19:00.000Z,velocity_check
-ANM-000033,"Currency Mismatch",medium,0.681,"Autoencoder","Network analysis reveals suspicious connections",15132.27,CUST-8981,WebStore99,"Jacksonville, FL",2024-01-18T02:55:00.000Z,currency_flag
-ANM-000034,"Behavioral Change",low,0.267,"Autoencoder","Entity showing unusual activity pattern not seen in training data",19416.57,CUST-3487,PharmacyPlus,"San Jose, CA",2024-01-19T14:37:00.000Z,high_frequency
-ANM-000035,"Time Anomaly",high,0.947,"Isolation Forest","Account behavior inconsistent with established profile",6161.65,CUST-9506,LuxuryGoods,"Denver, CO",2024-01-20T00:48:00.000Z,network_flag
-ANM-000036,"Time Anomaly",high,0.924,"One-Class SVM","Time series forecast error exceeds confidence interval",17183.72,CUST-7972,OnlineStore123,"Los Angeles, CA",2024-01-17T05:09:00.000Z,duplicate_flag
-ANM-000037,"Geographic Anomaly",high,0.718,"DBSCAN","Geographic location inconsistent with account history",429.90,CUST-7440,GroceryStore,"San Francisco, CA",2024-01-15T13:06:00.000Z,new_device
-ANM-000038,"Account Takeover Risk",low,0.235,"Autoencoder","Statistical properties indicate potential fraud risk",2800.90,CUST-7083,RetailChain,"New York, NY",2024-01-17T01:39:00.000Z,duplicate_flag
-ANM-000039,"Unusual Transaction Pattern",high,0.816,"Statistical Z-Score","Transaction timing unusual for this account",19850.25,CUST-9101,TechStartup,"Philadelphia, PA",2024-01-18T01:03:00.000Z,profile_change
-ANM-000040,"Device Fingerprint",low,0.183,"DBSCAN","Transaction velocity exceeds normal thresholds",10453.09,CUST-6654,IntlMerchant,"Fort Worth, TX",2024-01-17T10:29:00.000Z,overlimit
-ANM-000041,"Weekend Spike",medium,0.588,"Statistical Z-Score","Network analysis reveals suspicious connections",11586.62,CUST-9933,TechStartup,"Las Vegas, NV",2024-01-15T18:05:00.000Z,weekend_anomaly
-ANM-000042,"Behavioral Change",high,0.700,"Isolation Forest","Pattern significantly deviates from peer group behavior",18700.27,CUST-4439,BookStore55,"Seattle, WA",2024-01-18T12:03:00.000Z,profile_change
-ANM-000043,"Weekend Spike",medium,0.528,"Isolation Forest","Network analysis reveals suspicious connections",5851.31,CUST-8676,IntlMerchant,"Phoenix, AZ",2024-01-17T02:39:00.000Z,refund_pattern
-ANM-000044,"Network Anomaly",medium,0.408,"DBSCAN","Transaction amount exceeds historical average by significant margin",8428.00,CUST-6942,B2BSupplier,"San Jose, CA",2024-01-15T00:15:00.000Z,impossible_travel
-ANM-000045,"Geographic Anomaly",low,0.151,"Statistical Z-Score","Unexpected spike detected outside of seasonal norms",12230.44,CUST-2544,ElectronicsHub,"Boston, MA",2024-01-15T03:34:00.000Z,device_risk
-ANM-000046,"Behavioral Change",low,0.305,"One-Class SVM","Account behavior inconsistent with established profile",15306.26,CUST-3104,TechStartup,"Chicago, IL",2024-01-15T08:50:00.000Z,overlimit
-ANM-000047,"Currency Mismatch",medium,0.500,"Local Outlier Factor","Transaction amount exceeds historical average by significant margin",5649.17,CUST-8092,LocalStore,"Los Angeles, CA",2024-01-14T23:58:00.000Z,high_frequency
-ANM-000048,"Refund Abuse",low,0.318,"Time Series Decomposition","Account behavior inconsistent with established profile",7776.88,CUST-2994,GasStation44,"Houston, TX",2024-01-15T12:36:00.000Z,duplicate_flag
-ANM-000049,"Network Anomaly",medium,0.587,"Statistical Z-Score","Statistical properties indicate potential fraud risk",6243.96,CUST-5239,RetailChain,"Indianapolis, IN",2024-01-17T05:54:00.000Z,refund_pattern
-ANM-000050,"Currency Mismatch",low,0.296,"Autoencoder","Correlation with related metrics broken unexpectedly",11533.44,CUST-5632,GroceryStore,"Indianapolis, IN",2024-01-18T09:57:00.000Z,odd_hour`;
+ANM-000010,"Network Anomaly",high,0.945,"Graph Neural Network","Connected to multiple flagged entities in transaction network",12500.00,CUST-4312,WireTransfer,"San Francisco, CA",2024-01-14T16:30:00Z,network_risk
+ANM-000011,"ML Model Drift",medium,0.701,"Ensemble Detector","Transaction features outside training distribution",3200.00,CUST-8765,OnlineMarket,"Portland, OR",2024-01-14T17:00:00Z,model_drift
+ANM-000012,"Card Not Present",high,0.878,"Random Forest","High-value CNP transaction from new IP address",6789.00,CUST-2109,LuxuryRetail,"Las Vegas, NV",2024-01-14T18:15:00Z,cnp_high_risk
+ANM-000013,"Weekend Spike",medium,0.632,"Statistical Analysis","Unusual weekend activity for business account",4500.00,CUST-6543,B2BSupplier,"Dallas, TX",2024-01-14T19:45:00Z,weekend_anomaly
+ANM-000014,"Currency Mismatch",high,0.823,"Rule Engine","Foreign currency transaction in restricted country",8900.00,CUST-3210,IntlExchange,"Atlanta, GA",2024-01-14T20:00:00Z,currency_flag
+ANM-000015,"Refund Abuse",high,0.867,"Pattern Recognition","Multiple refunds following large purchases",2340.00,CUST-7654,RetailChain,"Minneapolis, MN",2024-01-14T21:30:00Z,refund_pattern
+ANM-000016,"Device Fingerprint",medium,0.712,"Device Intelligence","Transaction from spoofed device fingerprint",1567.00,CUST-9876,OnlineGaming,"Salt Lake City, UT",2024-01-14T22:00:00Z,device_spoof
+ANM-000017,"Seasonal Outlier",low,0.543,"Time Series Analysis","Purchase outside typical seasonal pattern",890.00,CUST-5432,GardenCenter,"Phoenix, AZ",2024-01-14T23:15:00Z,seasonal_anomaly
+ANM-000018,"Identity Mismatch",high,0.934,"Identity Verification","Billing address doesn't match account records",7650.00,CUST-1098,ElectronicsDepot,"San Diego, CA",2024-01-15T00:30:00Z,identity_mismatch
+ANM-000019,"Threshold Breach",medium,0.678,"Rule-Based","Daily spending limit exceeded",3450.00,CUST-6789,DepartmentStore,"Charlotte, NC",2024-01-15T01:45:00Z,limit_exceeded
+ANM-000020,"Suspicious Timing",high,0.845,"Temporal Analysis","Transaction during system maintenance window",5670.00,CUST-3456,OnlineBanking,"Nashville, TN",2024-01-15T02:00:00Z,maintenance_window
+ANM-000021,"Cross-Border Risk",medium,0.756,"Geolocation Analysis","First international transaction for domestic account",2345.00,CUST-7890,IntlMerchant,"Detroit, MI",2024-01-15T03:30:00Z,first_intl
+ANM-000022,"Account Dormancy",high,0.812,"Activity Monitor","Transaction on dormant account after 6 months",9870.00,CUST-2345,LuxuryJewelry,"Philadelphia, PA",2024-01-15T04:45:00Z,dormant_active
+ANM-000023,"Velocity Pattern",medium,0.698,"Sequence Analysis","Rapid small transactions followed by large one",4567.00,CUST-8901,OnlineServices,"San Antonio, TX",2024-01-15T05:00:00Z,velocity_pattern
+ANM-000024,"Risk Score Spike",high,0.923,"Composite Scoring","Combined risk factors exceed threshold",11234.00,CUST-5678,HighRiskVendor,"San Jose, CA",2024-01-15T06:15:00Z,composite_risk
+ANM-000025,"Channel Hopping",medium,0.734,"Channel Analysis","Unusual switching between payment channels",3890.00,CUST-1234,MultiChannel,"Columbus, OH",2024-01-15T07:30:00Z,channel_switch
+ANM-000026,"Peer Deviation",low,0.567,"Peer Group Analysis","Spending differs from similar customer segment",1234.00,CUST-6789,GeneralRetail,"Indianapolis, IN",2024-01-15T08:45:00Z,peer_outlier
+ANM-000027,"API Anomaly",high,0.889,"API Monitoring","Suspicious API call patterns detected",7890.00,CUST-3456,TechPlatform,"Austin, TX",2024-01-15T09:00:00Z,api_abuse
+ANM-000028,"Round Amount",medium,0.645,"Pattern Detection","Multiple round-amount transactions",5000.00,CUST-7890,MoneyTransfer,"Jacksonville, FL",2024-01-15T10:15:00Z,round_amounts
+ANM-000029,"Age Mismatch",medium,0.723,"Demographic Analysis","Purchase inconsistent with account holder age",2567.00,CUST-2345,OnlineClub,"Memphis, TN",2024-01-15T11:30:00Z,age_inappropriate
+ANM-000030,"Merchant Category",high,0.856,"MCC Analysis","First transaction in restricted category",8765.00,CUST-8901,RestrictedMCC,"Baltimore, MD",2024-01-15T12:45:00Z,mcc_restricted
+ANM-000031,"Split Transaction",medium,0.678,"Transaction Linking","Large amount split to avoid reporting",4999.00,CUST-5678,CashIntensive,"Milwaukee, WI",2024-01-15T13:00:00Z,structuring
+ANM-000032,"Weekend Pattern",low,0.512,"Behavioral Analysis","Atypical weekend spending pattern",987.00,CUST-1234,WeekendShop,"Louisville, KY",2024-01-15T14:15:00Z,weekend_unusual
+ANM-000033,"IP Geolocation",high,0.901,"IP Intelligence","Transaction IP doesn't match billing location",6543.00,CUST-6789,OnlineVendor,"Oklahoma City, OK",2024-01-15T15:30:00Z,ip_mismatch
+ANM-000034,"Referral Chain",medium,0.756,"Network Analysis","Part of suspicious referral network",3456.00,CUST-3456,AffiliateShop,"Las Vegas, NV",2024-01-15T16:45:00Z,referral_abuse
+ANM-000035,"Testing Pattern",high,0.834,"Fraud Pattern","Small test transactions before large one",9876.00,CUST-7890,VariousMerchants,"Portland, ME",2024-01-15T17:00:00Z,testing_pattern
+ANM-000036,"Social Engineering",high,0.945,"Behavioral Detection","Transaction follows social engineering indicators",15678.00,CUST-2345,UrgentTransfer,"Richmond, VA",2024-01-15T18:15:00Z,social_engineering
+ANM-000037,"Data Breach Link",high,0.867,"Threat Intelligence","Card used at breached merchant",4567.00,CUST-8901,BreachedVendor,"Hartford, CT",2024-01-15T19:30:00Z,breach_exposure
+ANM-000038,"Unusual Product",medium,0.689,"Product Analysis","Purchase outside typical product categories",2345.00,CUST-5678,SpecialtyGoods,"Providence, RI",2024-01-15T20:45:00Z,product_anomaly
+ANM-000039,"Account Takeover",high,0.978,"Multi-Factor Analysis","Multiple indicators of account compromise",12345.00,CUST-1234,VariousOnline,"Buffalo, NY",2024-01-15T21:00:00Z,ato_suspected
+ANM-000040,"Biometric Mismatch",high,0.823,"Biometric Verification","Biometric authentication failed multiple times",5678.00,CUST-6789,SecurePayment,"Rochester, NY",2024-01-15T22:15:00Z,biometric_fail
+ANM-000041,"Proxy Detection",medium,0.734,"Network Analysis","Transaction routed through proxy server",3456.00,CUST-3456,OnlineMarket,"Syracuse, NY",2024-01-15T23:30:00Z,proxy_detected
+ANM-000042,"Risk Aggregation",high,0.889,"Risk Aggregator","Multiple small risks combine to high risk",7890.00,CUST-7890,MultiVendor,"Albany, NY",2024-01-16T00:45:00Z,aggregate_risk
+ANM-000043,"Watchlist Match",high,0.956,"Sanctions Screening","Entity matches watchlist entry",18900.00,CUST-2345,IntlWire,"Newark, NJ",2024-01-16T01:00:00Z,watchlist_hit
+ANM-000044,"Collusion Pattern",high,0.867,"Link Analysis","Potential collusion between accounts",6789.00,CUST-8901,P2PTransfer,"Jersey City, NJ",2024-01-16T02:15:00Z,collusion_suspected
+ANM-000045,"Manual Override",medium,0.645,"Audit Trail","Transaction approved despite system decline",4321.00,CUST-5678,RetailStore,"Trenton, NJ",2024-01-16T03:30:00Z,manual_override
+ANM-000046,"Clustering Anomaly",medium,0.712,"DBSCAN Clustering","Transaction falls outside all normal clusters",2987.00,CUST-1234,UnusualMerchant,"Camden, NJ",2024-01-16T04:45:00Z,cluster_outlier
+ANM-000047,"Sequence Break",high,0.834,"Sequential Analysis","Expected transaction sequence violated",8765.00,CUST-6789,OnlinePayment,"Wilmington, DE",2024-01-16T05:00:00Z,sequence_violation
+ANM-000048,"ML Confidence",low,0.523,"Model Uncertainty","Model confidence below threshold",1234.00,CUST-3456,StandardRetail,"Dover, DE",2024-01-16T06:15:00Z,low_confidence
+ANM-000049,"Registry Flag",high,0.901,"Registry Check","Customer on internal watch registry",9999.00,CUST-7890,HighValueTrans,"Annapolis, MD",2024-01-16T07:30:00Z,registry_flagged`;
 
 export function getSampleCSVData(): string {
   return SAMPLE_CSV_DATA;

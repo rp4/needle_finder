@@ -65,6 +65,9 @@ export function parseCSV(csvContent: string): ParsedCSVRow[] {
           throw new Error(`Invalid severity value "${value}" in row ${i + 1}`);
         }
         row[header] = severity;
+      } else if (header === 'timestamp') {
+        // Don't sanitize timestamps as they need to remain valid ISO strings
+        row[header] = value;
       } else {
         // Sanitize string values to prevent XSS
         row[header] = sanitizeValue(value);

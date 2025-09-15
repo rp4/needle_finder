@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { AlertTriangle, CheckCircle, BarChart2, Check, X, Search } from 'lucide-react';
 import { useAnomalyStore } from '@stores/anomalyStore';
 import { processDataFile } from '@services/data/fileProcessor';
-import { generateMockData } from '@services/data/generateMockData';
-import type { Anomaly } from '@/types/anomaly.types';
+import { parseCSV } from '@services/data/csvParser';
+import { SAMPLE_CSV_DATA } from '@services/data/sampleData';
+import type { Anomaly, AnomalyDataset } from '@/types/anomaly.types';
 import { logger } from '@services/logger';
 import { LandingPage } from '@/components/LandingPage';
 import { SeverityBadge } from '@components/common/SeverityBadge';
@@ -84,8 +85,63 @@ export function Dashboard() {
 
 
   const loadMockData = () => {
-    const mockData = generateMockData();
-    loadDataset(mockData);
+    try {
+      // Use embedded CSV data instead of fetching
+      const parsedRows = parseCSV(SAMPLE_CSV_DATA);
+
+      // Convert CSV rows to Anomaly format
+      const anomalies: Anomaly[] = parsedRows.map((row, index) => ({
+        id: row.id,
+        severity: row.anomaly_score,
+        unified_score: row.anomaly_score, // Add unified_score for compatibility
+        anomaly_types: [row.category.toLowerCase().includes('transaction') ? 'point' :
+                        row.category.toLowerCase().includes('pattern') ? 'contextual' :
+                        row.category.toLowerCase().includes('network') ? 'collective' :
+                        row.category.toLowerCase().includes('timing') ? 'timeseries' : 'group'] as any,
+        timestamp: row.timestamp || new Date().toISOString(),
+        reviewed: false,
+        reason_codes: [{
+          code: row.detection_method || 'Unknown',
+          text: row.ai_explanation || 'No explanation available'
+        }],
+        customFields: {
+          category: row.category,
+          detection_method: row.detection_method,
+          transaction_amount: row.transaction_amount,
+          customer_id: row.customer_id,
+          merchant: row.merchant,
+          location: row.location,
+          risk_flags: row.risk_flags
+        }
+      }));
+
+      // Create a dataset compatible with the existing structure
+      const mockDataset: AnomalyDataset = {
+        run_id: `SAMPLE-${Date.now()}`,
+        dataset_profile: {
+          rows: parsedRows.length,
+          columns: Object.keys(parsedRows[0] || {}).length,
+          primary_keys: ['id'],
+          entity_keys: ['customer_id'],
+          time_key: 'timestamp',
+          currency: 'USD'
+        },
+        anomalies,
+        globals: {
+          shap_beeswarm_top: []
+        },
+        ui_hints: {
+          pii_masked_fields: [],
+          confidence_ribbon: 0.85
+        }
+      };
+
+      loadDataset(mockDataset);
+    } catch (err) {
+      console.error('Error loading sample data:', err);
+      logger.error('Error loading sample data', err as Error);
+      alert(`Failed to load sample data: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
   };
 
   const handleReviewAnomaly = (anomalyId: string, status: 'confirmed' | 'rejected') => {
