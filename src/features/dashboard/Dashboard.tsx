@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Upload, TrendingUp, AlertTriangle, CheckCircle, BarChart2, Sparkles, Check, X, Search } from 'lucide-react';
+import { AlertTriangle, CheckCircle, BarChart2, Check, X, Search } from 'lucide-react';
 import { useAnomalyStore } from '@stores/anomalyStore';
 import { processDataFile } from '@services/data/fileProcessor';
 import { generateMockData } from '@services/data/generateMockData';
 import type { Anomaly } from '@/types/anomaly.types';
 import { logger } from '@services/logger';
+import { LandingPage } from '@/components/LandingPage';
 
 export function Dashboard() {
   const { dataset, hasData, loadDataset, getFilteredAnomalies } = useAnomalyStore();
-  const [isDragging, setIsDragging] = useState(false);
   const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null);
   const [reviewedAnomalies, setReviewedAnomalies] = useState<{[key: string]: 'confirmed' | 'rejected'}>({});
   const [filterMode, setFilterMode] = useState<'all' | 'confirmed' | 'high-severity' | 'unreviewed'>('all');
@@ -80,24 +80,6 @@ export function Dashboard() {
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    
-    const files = Array.from(e.dataTransfer.files);
-    if (files[0]) {
-      handleFileUpload(files[0]);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
 
   const loadMockData = () => {
     const mockData = generateMockData();
@@ -134,49 +116,93 @@ export function Dashboard() {
 
   if (!hasData) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div
-          className={`w-full max-w-2xl p-12 border-2 border-dashed rounded-xl transition-all ${
-            isDragging
-              ? 'border-indigo-500 bg-indigo-500/10'
-              : 'border-gray-300 bg-white/70 backdrop-blur-sm hover:border-indigo-400 shadow-lg'
-          }`}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-        >
-          <div className="text-center">
-            <Upload className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-              Import Anomaly Data
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Drop your JSON file here or click to browse
-            </p>
-            <input
-              type="file"
-              accept=".json"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-              className="hidden"
-              id="file-input"
-            />
-            <div className="flex items-center justify-center gap-4">
-              <label
-                htmlFor="file-input"
-                className="inline-flex items-center px-6 py-3 bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-600 transition-all"
-              >
-                Choose File
-              </label>
-              <button
-                onClick={loadMockData}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all"
-              >
-                Load Sample Data
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <LandingPage
+        icon="🪡"
+        title="Needle Finder"
+        subtitle="Visualize and review your anomalies, completely private"
+        showInfoButton={true}
+        infoPopup={{
+          title: "Privacy & Data Storage Notice",
+          icon: (
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+          ),
+          sections: [
+            {
+              icon: (
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4" />
+                </svg>
+              ),
+              title: "Browser-Based Storage",
+              content: "This application stores all schedule data locally in your browser's localStorage. No data is ever sent to any server."
+            },
+            {
+              icon: (
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              ),
+              title: "What This Means",
+              bullets: [
+                "Your data stays on this device only",
+                "Clearing browser data will delete your schedules",
+                "Different browsers/devices won't share data",
+                "We cannot recover lost data"
+              ]
+            }
+          ]
+        }}
+        fileUpload={{
+          accept: ".json,.csv",
+          onFileSelect: handleFileUpload,
+          dragDropEnabled: true
+        }}
+        actions={[
+          {
+            label: "Choose File",
+            variant: "primary",
+            tooltip: "Work with your own anomalies"
+          },
+          {
+            label: "Try with Sample Data",
+            variant: "secondary",
+            tooltip: "Instantly load sample data to explore all the features",
+            onClick: loadMockData
+          }
+        ]}
+        footerLinks={[
+          {
+            icon: (
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
+              </svg>
+            ),
+            href: "https://github.com/rp4/NeedleFinder",
+            title: "GitHub Repository"
+          },
+          {
+            icon: (
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681v6.737zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"/>
+              </svg>
+            ),
+            href: "https://chatgpt.com",
+            title: "Run the custom GPT to create your inputs here"
+          },
+          {
+            icon: <span className="text-4xl">🏆</span>,
+            href: "https://scoreboard.audittoolbox.com",
+            title: "See the prompt to create your inputs here"
+          },
+          {
+            icon: <span className="text-4xl">🧰</span>,
+            href: "https://audittoolbox.com",
+            title: "Find other audit tools here"
+          }
+        ]}
+      />
     );
   }
 
@@ -471,6 +497,29 @@ export function Dashboard() {
                           </span>
                         </div>
                       ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Custom Fields from CSV */}
+              {selectedAnomaly.customFields && Object.keys(selectedAnomaly.customFields).length > 0 && (
+                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-2">Additional Data</p>
+                  <div className="space-y-1">
+                    {Object.entries(selectedAnomaly.customFields).map(([key, value]) => (
+                      <div key={key} className="flex justify-between items-center">
+                        <span className="text-xs text-gray-600">
+                          {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
+                        <span className="text-xs font-medium text-indigo-400">
+                          {typeof value === 'number'
+                            ? value.toFixed(2)
+                            : value === null || value === undefined
+                            ? '-'
+                            : String(value)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
