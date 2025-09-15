@@ -365,7 +365,9 @@ export function Dashboard() {
                       {anomaly.id.slice(0, 8)}...
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
-                      {anomaly.anomaly_types?.[0] || 'Unknown'}
+                      {anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
+                        .replace(/\b\w/g, l => l.toUpperCase()) ||
+                       anomaly.anomaly_types?.[0] || 'Unknown'}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span
@@ -434,13 +436,19 @@ export function Dashboard() {
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 mb-1">Category</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {selectedAnomaly.anomaly_types?.[0] || 'Unknown'}
+                    {selectedAnomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
+                      .replace(/\b\w/g, l => l.toUpperCase()) ||
+                     selectedAnomaly.anomaly_types?.[0] || 'Unknown'}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 mb-1">Detection Method</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {selectedAnomaly.model_votes?.[0]?.model || 'Multiple'}
+                    {selectedAnomaly.case?.tags?.find(tag =>
+                      ['Isolation Forest', 'Local Outlier Factor', 'One-Class SVM', 'DBSCAN',
+                       'Autoencoder', 'Statistical Z-Score', 'Time Series Decomposition', 'Ensemble Method']
+                      .includes(tag)
+                    ) || selectedAnomaly.model_votes?.[0]?.model || 'Multiple'}
                   </p>
                 </div>
               </div>
@@ -582,7 +590,9 @@ export function Dashboard() {
                   if (distributionView === 'severity') {
                     // Group by category and severity
                     anomalies.forEach(anomaly => {
-                      const category = anomaly.anomaly_types?.[0] || 'Unknown';
+                      const category = anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
+                        .replace(/\b\w/g, l => l.toUpperCase()) ||
+                        anomaly.anomaly_types?.[0] || 'Unknown';
                       if (!categoryData[category]) {
                         categoryData[category] = { high: 0, medium: 0, low: 0, total: 0 };
                       }
@@ -598,7 +608,9 @@ export function Dashboard() {
                   } else {
                     // Group by category and confirmation status
                     anomalies.forEach(anomaly => {
-                      const category = anomaly.anomaly_types?.[0] || 'Unknown';
+                      const category = anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
+                        .replace(/\b\w/g, l => l.toUpperCase()) ||
+                        anomaly.anomaly_types?.[0] || 'Unknown';
                       if (!categoryData[category]) {
                         categoryData[category] = { confirmed: 0, rejected: 0, unreviewed: 0, total: 0 };
                       }
