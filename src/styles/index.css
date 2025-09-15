@@ -137,6 +137,18 @@
   100% { transform: translateY(100%); }
 }
 
+/* Popup animation */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+}
+
 .grain-loader {
   @apply relative overflow-hidden;
 }

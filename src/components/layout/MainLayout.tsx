@@ -7,39 +7,71 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { hasData, getFilteredAnomalies, dataset } = useAnomalyStore();
+  const { hasData, getFilteredAnomalies } = useAnomalyStore();
 
   const handleExport = () => {
     const anomalies = getFilteredAnomalies();
 
-    // Create export data in simplified format that matches import schema
-    const exportData = {
-      total_records: dataset?.dataset_profile?.rows || 50000,
-      anomalies_detected: anomalies.length,
-      anomalies: anomalies.map(anomaly => ({
-        id: anomaly.id,
-        category: anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
-          .replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown Anomaly',
-        severity: anomaly.severity > 0.8 ? 'high' : anomaly.severity > 0.5 ? 'medium' : 'low',
-        anomaly_score: Number(anomaly.unified_score.toFixed(3)),
-        detection_method: anomaly.case?.tags?.find(tag =>
+    // Helper function to escape CSV values
+    const escapeCSV = (value: any): string => {
+      if (value === null || value === undefined) return '';
+      const str = String(value);
+      // Quote the value if it contains comma, quote, or newline
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    // Build CSV rows
+    const rows: string[] = [];
+
+    // Header row - include both required and custom fields
+    const headers = ['id', 'category', 'severity', 'anomaly_score', 'detection_method', 'ai_explanation'];
+
+    // Add any custom fields from the first anomaly (if exists)
+    const firstAnomaly = anomalies[0];
+    if (firstAnomaly && firstAnomaly.customFields) {
+      headers.push(...Object.keys(firstAnomaly.customFields));
+    }
+
+    rows.push(headers.join(','));
+
+    // Data rows
+    anomalies.forEach(anomaly => {
+      const row = [
+        escapeCSV(anomaly.id),
+        escapeCSV(anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
+          .replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown Anomaly'),
+        escapeCSV(anomaly.severity > 0.8 ? 'high' : anomaly.severity > 0.5 ? 'medium' : 'low'),
+        escapeCSV(anomaly.unified_score.toFixed(3)),
+        escapeCSV(anomaly.case?.tags?.find(tag =>
           ['Isolation Forest', 'Local Outlier Factor', 'One-Class SVM', 'DBSCAN',
            'Autoencoder', 'Statistical Z-Score', 'Time Series Decomposition', 'Ensemble Method']
           .includes(tag)
-        ) || 'Ensemble Method',
-        ai_explanation: anomaly.reason_codes?.[0]?.text || 'Anomaly detected based on statistical analysis'
-      }))
-    };
+        ) || 'Ensemble Method'),
+        escapeCSV(anomaly.reason_codes?.[0]?.text || 'Anomaly detected based on statistical analysis')
+      ];
 
-    // Convert to JSON and create blob
-    const jsonString = JSON.stringify(exportData, null, 2);
-    const blob = new Blob([jsonString], { type: 'application/json' });
+      // Add custom field values
+      if (anomaly.customFields) {
+        headers.slice(6).forEach(header => {
+          row.push(escapeCSV(anomaly.customFields?.[header]));
+        });
+      }
+
+      rows.push(row.join(','));
+    });
+
+    // Create CSV content
+    const csvContent = rows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
     // Create download link and trigger download
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `anomalies_export_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `anomalies_export_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
 
@@ -63,32 +95,18 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       {/* Content wrapper */}
       <div className="relative z-10">
-        {/* Header - glassmorphism light mode */}
-        <header className="bg-white/50 backdrop-blur-sm border-b border-gray-200/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">🪡</span>
-                <h1 className="text-xl font-semibold text-gray-800">
-                  Needle Finder
-                </h1>
-              </div>
-            </div>
-
-            {/* Export Button - Only show when data is loaded */}
-            {hasData && (
-              <button
-                onClick={handleExport}
-                className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all"
-              >
-                <Download className="w-4 h-4" />
-                <span className="text-sm font-medium">Export</span>
-              </button>
-            )}
+        {/* Export Button - Fixed position when data is loaded */}
+        {hasData && (
+          <div className="fixed top-4 right-4 z-20">
+            <button
+              onClick={handleExport}
+              className="flex items-center space-x-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-all shadow-lg"
+            >
+              <Download className="w-4 h-4" />
+              <span className="text-sm font-medium">Export</span>
+            </button>
           </div>
-        </div>
-      </header>
+        )}
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

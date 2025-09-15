@@ -71,6 +71,7 @@ export interface Anomaly {
   links?: AnomalyLinks;
   case?: AnomalyCase;
   features?: Record<string, string | number | boolean>;
+  customFields?: Record<string, any>; // Store additional columns from CSV
 }
 
 export interface GroupAnomaly {

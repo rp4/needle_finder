@@ -17,10 +17,10 @@ export function generateMockData(): AnomalyDataset {
     
     anomalies.push({
       id: `ANM-${String(i + 1).padStart(4, '0')}`,
-      subject_type: subjectTypes[Math.floor(Math.random() * subjectTypes.length)],
+      subject_type: subjectTypes[Math.floor(Math.random() * subjectTypes.length)] || 'transaction',
       subject_id: `SUBJ-${String(Math.floor(Math.random() * 1000)).padStart(4, '0')}`,
       timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      anomaly_types: [anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)]],
+      anomaly_types: [anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)] || 'point'],
       severity,
       materiality,
       unified_score,

@@ -1,4 +1,6 @@
 import type { SimplifiedDataset } from './schemas';
+import { parseCSV } from './csvParser';
+import { getSampleCSVData } from './sampleData';
 
 const categories = [
   'Unusual Transaction Pattern',
@@ -43,11 +45,11 @@ function generateSimplifiedAnomaly(index: number) {
 
   return {
     id: `ANM-${String(index + 1).padStart(6, '0')}`,
-    category: categories[Math.floor(Math.random() * categories.length)],
-    severity,
+    category: categories[Math.floor(Math.random() * categories.length)] || 'Unknown Category',
+    severity: severity as 'high' | 'medium' | 'low',
     anomaly_score: Number(score.toFixed(3)),
-    detection_method: detectionMethods[Math.floor(Math.random() * detectionMethods.length)],
-    ai_explanation: explanations[Math.floor(Math.random() * explanations.length)]
+    detection_method: detectionMethods[Math.floor(Math.random() * detectionMethods.length)] || 'Unknown Method',
+    ai_explanation: explanations[Math.floor(Math.random() * explanations.length)] || 'No explanation available'
   };
 }
 
@@ -72,38 +74,65 @@ export function generateMockDataset(): SimplifiedDataset {
 
 // For backward compatibility with existing code that expects AnomalyDataset
 export function generateMockDatasetAsAnomalyDataset() {
-  const simplified = generateMockDataset();
+  // Get the complete sample CSV data (50 rows for demo)
+  const csvData = getSampleCSVData();
+
+  // Parse the CSV data
+  const rows = parseCSV(csvData);
   const now = new Date().toISOString();
 
-  // Convert to internal format
-  const anomalies = simplified.anomalies.map((a: any) => ({
-    id: a.id,
-    subject_type: 'transaction' as const,
-    subject_id: a.id,
-    timestamp: now,
-    anomaly_types: ['point'] as any,
-    severity: a.severity === 'high' ? 0.9 : a.severity === 'medium' ? 0.6 : 0.3,
-    materiality: a.anomaly_score * 0.8,
-    unified_score: a.anomaly_score,
-    reason_codes: [{
-      code: a.category.toUpperCase().replace(/\s+/g, '_'),
-      text: a.ai_explanation
-    }],
-    explanations: {
-      shap_local: [],
-      feature_deltas: []
-    },
-    case: {
-      status: 'open' as const,
-      tags: [a.category, a.detection_method, a.severity]
-    }
-  }));
+  // Extract custom field names (all fields except the required ones)
+  const requiredFields = ['id', 'category', 'severity', 'anomaly_score', 'detection_method', 'ai_explanation'];
+  const firstRow = rows[0];
+  if (!firstRow) {
+    throw new Error('No data rows generated');
+  }
+  const customFieldNames = Object.keys(firstRow).filter(key => !requiredFields.includes(key));
+
+  // Convert to internal format with custom fields
+  const anomalies = rows.map((row: any) => {
+    // Extract custom fields
+    const customFields: Record<string, any> = {};
+    customFieldNames.forEach(field => {
+      if (row[field] !== undefined && row[field] !== '') {
+        customFields[field] = row[field];
+      }
+    });
+
+    return {
+      id: row.id,
+      subject_type: 'transaction' as const,
+      subject_id: row.id,
+      timestamp: now,
+      anomaly_types: ['point'] as any,
+      severity: row.severity === 'high' ? 0.9 : row.severity === 'medium' ? 0.6 : 0.3,
+      materiality: row.anomaly_score * 0.8,
+      unified_score: row.anomaly_score,
+      reason_codes: [{
+        code: row.category.toUpperCase().replace(/\s+/g, '_'),
+        text: row.ai_explanation
+      }],
+      explanations: {
+        shap_local: [],
+        feature_deltas: []
+      },
+      case: {
+        status: 'open' as const,
+        tags: [row.category, row.detection_method, row.severity]
+      },
+      // Include custom fields for display
+      customFields: Object.keys(customFields).length > 0 ? customFields : undefined
+    };
+  });
+
+  // Sort by score (highest first)
+  anomalies.sort((a: any, b: any) => b.unified_score - a.unified_score);
 
   return {
     run_id: now,
     dataset_profile: {
-      rows: simplified.total_records,
-      columns: 0,
+      rows: 50000, // Simulated total records
+      columns: Object.keys(firstRow).length,
       primary_keys: ['id'],
       entity_keys: ['category'],
       time_key: 'timestamp',

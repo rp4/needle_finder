@@ -6,6 +6,8 @@ import { generateMockData } from '@services/data/generateMockData';
 import type { Anomaly } from '@/types/anomaly.types';
 import { logger } from '@services/logger';
 import { LandingPage } from '@/components/LandingPage';
+import { SeverityBadge } from '@components/common/SeverityBadge';
+import { getAnomalyCategory, formatAnomalyId, getSeverityLevel, SEVERITY_THRESHOLDS } from '@/utils/anomalyUtils';
 
 export function Dashboard() {
   const { dataset, hasData, loadDataset, getFilteredAnomalies } = useAnomalyStore();
@@ -25,7 +27,7 @@ export function Dashboard() {
   let filteredAnomalies = filterMode === 'confirmed'
     ? anomalies.filter(a => reviewedAnomalies[a.id] === 'confirmed')
     : filterMode === 'high-severity'
-    ? anomalies.filter(a => a.severity > 0.7)
+    ? anomalies.filter(a => a.severity > SEVERITY_THRESHOLDS.HIGH)
     : filterMode === 'unreviewed'
     ? anomalies.filter(a => !reviewedAnomalies[a.id])
     : anomalies;
@@ -33,14 +35,14 @@ export function Dashboard() {
   // Apply category filter
   if (categoryFilter.category) {
     filteredAnomalies = filteredAnomalies.filter(a => {
-      const category = a.anomaly_types?.[0] || 'Unknown';
+      const category = getAnomalyCategory(a);
       if (category !== categoryFilter.category) return false;
 
       // Apply severity filter if in severity view
       if (categoryFilter.severity) {
-        if (categoryFilter.severity === 'high' && a.severity <= 0.7) return false;
-        if (categoryFilter.severity === 'medium' && (a.severity <= 0.4 || a.severity > 0.7)) return false;
-        if (categoryFilter.severity === 'low' && a.severity > 0.4) return false;
+        if (categoryFilter.severity === 'high' && a.severity <= SEVERITY_THRESHOLDS.HIGH) return false;
+        if (categoryFilter.severity === 'medium' && (a.severity <= SEVERITY_THRESHOLDS.MEDIUM || a.severity > SEVERITY_THRESHOLDS.HIGH)) return false;
+        if (categoryFilter.severity === 'low' && a.severity > SEVERITY_THRESHOLDS.MEDIUM) return false;
       }
 
       // Apply status filter if in confirmed view
@@ -362,25 +364,13 @@ export function Dashboard() {
                     onClick={() => setSelectedAnomaly(anomaly)}
                   >
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 font-medium">
-                      {anomaly.id.slice(0, 8)}...
+                      {formatAnomalyId(anomaly.id)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
-                      {anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
-                        .replace(/\b\w/g, l => l.toUpperCase()) ||
-                       anomaly.anomaly_types?.[0] || 'Unknown'}
+                      {getAnomalyCategory(anomaly)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs rounded-full ${
-                          anomaly.severity > 0.7
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/50'
-                            : anomaly.severity > 0.4
-                            ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
-                            : 'bg-green-500/20 text-green-400 border border-green-500/50'
-                        }`}
-                      >
-                        {anomaly.severity > 0.7 ? 'HIGH' : anomaly.severity > 0.4 ? 'MED' : 'LOW'}
-                      </span>
+                      <SeverityBadge severity={anomaly.severity} />
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800 font-semibold">
                       {anomaly.unified_score.toFixed(3)}
@@ -436,9 +426,7 @@ export function Dashboard() {
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 mb-1">Category</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {selectedAnomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
-                      .replace(/\b\w/g, l => l.toUpperCase()) ||
-                     selectedAnomaly.anomaly_types?.[0] || 'Unknown'}
+                    {getAnomalyCategory(selectedAnomaly)}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
@@ -456,17 +444,7 @@ export function Dashboard() {
               <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                 <p className="text-xs text-gray-600 mb-2">Severity & Score</p>
                 <div className="flex items-center justify-between">
-                  <span
-                    className={`px-3 py-1 text-sm rounded-full ${
-                      selectedAnomaly.severity > 0.7
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/50'
-                        : selectedAnomaly.severity > 0.4
-                        ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50'
-                        : 'bg-green-500/20 text-green-400 border border-green-500/50'
-                    }`}
-                  >
-                    {selectedAnomaly.severity > 0.7 ? 'HIGH' : selectedAnomaly.severity > 0.4 ? 'MEDIUM' : 'LOW'}
-                  </span>
+                  <SeverityBadge severity={selectedAnomaly.severity} className="px-3 py-1 text-sm" />
                   <span className="text-sm font-bold text-indigo-400">
                     Score: {selectedAnomaly.unified_score.toFixed(3)}
                   </span>
@@ -590,16 +568,15 @@ export function Dashboard() {
                   if (distributionView === 'severity') {
                     // Group by category and severity
                     anomalies.forEach(anomaly => {
-                      const category = anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
-                        .replace(/\b\w/g, l => l.toUpperCase()) ||
-                        anomaly.anomaly_types?.[0] || 'Unknown';
+                      const category = getAnomalyCategory(anomaly);
                       if (!categoryData[category]) {
                         categoryData[category] = { high: 0, medium: 0, low: 0, total: 0 };
                       }
                       categoryData[category].total++;
-                      if (anomaly.severity > 0.7) {
+                      const level = getSeverityLevel(anomaly.severity);
+                      if (level === 'high') {
                         categoryData[category].high++;
-                      } else if (anomaly.severity > 0.4) {
+                      } else if (level === 'medium') {
                         categoryData[category].medium++;
                       } else {
                         categoryData[category].low++;
@@ -608,9 +585,7 @@ export function Dashboard() {
                   } else {
                     // Group by category and confirmation status
                     anomalies.forEach(anomaly => {
-                      const category = anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
-                        .replace(/\b\w/g, l => l.toUpperCase()) ||
-                        anomaly.anomaly_types?.[0] || 'Unknown';
+                      const category = getAnomalyCategory(anomaly);
                       if (!categoryData[category]) {
                         categoryData[category] = { confirmed: 0, rejected: 0, unreviewed: 0, total: 0 };
                       }
