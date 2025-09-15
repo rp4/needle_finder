@@ -90,9 +90,14 @@ export function Dashboard() {
       const parsedRows = parseCSV(SAMPLE_CSV_DATA);
 
       // Convert CSV rows to Anomaly format
-      const anomalies: Anomaly[] = parsedRows.map((row, index) => ({
+      const anomalies: Anomaly[] = parsedRows.map((row) => ({
         id: row.id,
+        subject_type: row.category.toLowerCase().includes('transaction') ? 'transaction' :
+                      row.category.toLowerCase().includes('entity') ? 'entity' :
+                      row.category.toLowerCase().includes('group') ? 'group' : 'transaction',
+        subject_id: row.id,
         severity: row.anomaly_score,
+        materiality: row.anomaly_score * (row.transaction_amount || 1000), // Calculate materiality based on score and amount
         unified_score: row.anomaly_score, // Add unified_score for compatibility
         anomaly_types: [row.category.toLowerCase().includes('transaction') ? 'point' :
                         row.category.toLowerCase().includes('pattern') ? 'contextual' :
