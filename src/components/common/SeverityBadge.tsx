@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { getSeverityBadgeClass, getSeverityLabel } from '@/utils/anomalyUtils';
 
 interface SeverityBadgeProps {
@@ -5,7 +6,7 @@ interface SeverityBadgeProps {
   className?: string;
 }
 
-export function SeverityBadge({ severity, className = '' }: SeverityBadgeProps) {
+export const SeverityBadge = memo(function SeverityBadge({ severity, className = '' }: SeverityBadgeProps) {
   return (
     <span
       className={`px-2 py-1 text-xs rounded-full ${getSeverityBadgeClass(severity)} ${className}`}
@@ -13,4 +14,4 @@ export function SeverityBadge({ severity, className = '' }: SeverityBadgeProps) 
       {getSeverityLabel(severity)}
     </span>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { AlertTriangle, CheckCircle, BarChart2, Check, X, Search } from 'lucide-react';
 import { useAnomalyStore } from '@stores/anomalyStore';
 import { processDataFile } from '@services/data/fileProcessor';
@@ -32,67 +32,121 @@ export function Dashboard() {
 
   const anomalies = getFilteredAnomalies();
 
-  // Filter anomalies based on filter mode
-  let filteredAnomalies = filterMode === 'confirmed'
-    ? anomalies.filter(a => reviewedAnomalies[a.id] === 'confirmed')
-    : filterMode === 'high-severity'
-    ? anomalies.filter(a => a.severity > SEVERITY_THRESHOLDS.HIGH)
-    : filterMode === 'unreviewed'
-    ? anomalies.filter(a => !reviewedAnomalies[a.id])
-    : anomalies;
+  // Memoize filtered anomalies to prevent recalculation on every render
+  const filteredAnomalies = useMemo(() => {
+    let filtered = anomalies;
 
-  // Apply category filter
-  if (categoryFilter.category) {
-    filteredAnomalies = filteredAnomalies.filter(a => {
-      const category = getAnomalyCategory(a);
-      if (category !== categoryFilter.category) return false;
+    // Apply filter mode
+    if (filterMode === 'confirmed') {
+      filtered = anomalies.filter(a => reviewedAnomalies[a.id] === 'confirmed');
+    } else if (filterMode === 'high-severity') {
+      filtered = anomalies.filter(a => a.severity > SEVERITY_THRESHOLDS.HIGH);
+    } else if (filterMode === 'unreviewed') {
+      filtered = anomalies.filter(a => !reviewedAnomalies[a.id]);
+    }
 
-      // Apply severity filter if in severity view
-      if (categoryFilter.severity) {
-        if (categoryFilter.severity === 'high' && a.severity <= SEVERITY_THRESHOLDS.HIGH) return false;
-        if (categoryFilter.severity === 'medium' && (a.severity <= SEVERITY_THRESHOLDS.MEDIUM || a.severity > SEVERITY_THRESHOLDS.HIGH)) return false;
-        if (categoryFilter.severity === 'low' && a.severity > SEVERITY_THRESHOLDS.MEDIUM) return false;
-      }
+    // Apply category filter
+    if (categoryFilter.category) {
+      filtered = filtered.filter(a => {
+        const category = getAnomalyCategory(a);
+        if (category !== categoryFilter.category) return false;
 
-      // Apply status filter if in confirmed view
-      if (categoryFilter.status) {
-        const status = reviewedAnomalies[a.id];
-        if (categoryFilter.status === 'confirmed' && status !== 'confirmed') return false;
-        if (categoryFilter.status === 'rejected' && status !== 'rejected') return false;
-        if (categoryFilter.status === 'unreviewed' && status) return false;
-      }
+          // Apply severity filter if in severity view
+        if (categoryFilter.severity) {
+          if (categoryFilter.severity === 'high' && a.severity <= SEVERITY_THRESHOLDS.HIGH) return false;
+          if (categoryFilter.severity === 'medium' && (a.severity <= SEVERITY_THRESHOLDS.MEDIUM || a.severity > SEVERITY_THRESHOLDS.HIGH)) return false;
+          if (categoryFilter.severity === 'low' && a.severity > SEVERITY_THRESHOLDS.MEDIUM) return false;
+        }
 
-      return true;
+        // Apply status filter if in confirmed view
+        if (categoryFilter.status) {
+          const status = reviewedAnomalies[a.id];
+          if (categoryFilter.status === 'confirmed' && status !== 'confirmed') return false;
+          if (categoryFilter.status === 'rejected' && status !== 'rejected') return false;
+          if (categoryFilter.status === 'unreviewed' && status) return false;
+        }
+
+        return true;
+      });
+    }
+
+    return filtered;
+  }, [anomalies, filterMode, categoryFilter, reviewedAnomalies]);
+
+  // Memoize sorted anomalies
+  const sortedAnomalies = useMemo(() => {
+    return [...filteredAnomalies].sort((a, b) => {
+      const aStatus = reviewedAnomalies[a.id];
+      const bStatus = reviewedAnomalies[b.id];
+
+      // False positives go to the bottom
+      if (aStatus === 'rejected' && bStatus !== 'rejected') return 1;
+      if (aStatus !== 'rejected' && bStatus === 'rejected') return -1;
+
+      // Otherwise maintain original order
+      return 0;
     });
-  }
-
-  // Sort anomalies: unreviewed and confirmed first, then false positives
-  const sortedAnomalies = [...filteredAnomalies].sort((a, b) => {
-    const aStatus = reviewedAnomalies[a.id];
-    const bStatus = reviewedAnomalies[b.id];
-
-    // False positives go to the bottom
-    if (aStatus === 'rejected' && bStatus !== 'rejected') return 1;
-    if (aStatus !== 'rejected' && bStatus === 'rejected') return -1;
-
-    // Otherwise maintain original order
-    return 0;
-  });
+  }, [filteredAnomalies, reviewedAnomalies]);
 
   // Filter out false positives for statistics
   const activeAnomalies = anomalies.filter(a => reviewedAnomalies[a.id] !== 'rejected');
 
-  const handleFileUpload = async (file: File) => {
+  // Memoize category distribution calculation
+  const categoryData = useMemo(() => {
+    const data: Record<string, any> = {};
+
+    if (distributionView === 'severity') {
+      // Group by category and severity
+      anomalies.forEach(anomaly => {
+        const category = getAnomalyCategory(anomaly);
+        if (!data[category]) {
+          data[category] = { high: 0, medium: 0, low: 0, total: 0 };
+        }
+        data[category].total++;
+        const level = getSeverityLevel(anomaly.severity);
+        if (level === 'high') {
+          data[category].high++;
+        } else if (level === 'medium') {
+          data[category].medium++;
+        } else {
+          data[category].low++;
+        }
+      });
+    } else {
+      // Group by category and confirmation status
+      anomalies.forEach(anomaly => {
+        const category = getAnomalyCategory(anomaly);
+        if (!data[category]) {
+          data[category] = { confirmed: 0, rejected: 0, unreviewed: 0, total: 0 };
+        }
+        data[category].total++;
+        const status = reviewedAnomalies[anomaly.id];
+        if (status === 'confirmed') {
+          data[category].confirmed++;
+        } else if (status === 'rejected') {
+          data[category].rejected++;
+        } else {
+          data[category].unreviewed++;
+        }
+      });
+    }
+
+    // Convert to sorted array and return top 8 categories
+    return Object.entries(data)
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 8);
+  }, [anomalies, distributionView, reviewedAnomalies]);
+
+  const handleFileUpload = useCallback(async (file: File) => {
     try {
       const result = await processDataFile(file);
       loadDataset(result);
     } catch (err) {
       logger.error('Error processing file', err as Error);
     }
-  };
+  }, [loadDataset]);
 
-
-  const loadMockData = () => {
+  const loadMockData = useCallback(() => {
     try {
       // Use embedded CSV data instead of fetching
       const parsedRows = parseCSV(SAMPLE_CSV_DATA);
@@ -155,12 +209,12 @@ export function Dashboard() {
       logger.error('Error loading sample data', err as Error);
       alert(`Failed to load sample data: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  };
+  }, [loadDataset]);
 
-  const handleReviewAnomaly = (anomalyId: string, status: 'confirmed' | 'rejected') => {
+  const handleReviewAnomaly = useCallback((anomalyId: string, status: 'confirmed' | 'rejected') => {
     setAnomalyReview(anomalyId, status);
     setSelectedAnomaly(null);
-  };
+  }, [setAnomalyReview]);
 
   const handleConfirmedAnomaliesClick = () => {
     setFilterMode(prev => prev === 'confirmed' ? 'all' : 'confirmed');
@@ -642,50 +696,7 @@ export function Dashboard() {
                    'Category Distribution by Status'}
                 </p>
                 {(() => {
-                  // Count anomalies by category
-                  const categoryData: Record<string, any> = {};
-
-                  if (distributionView === 'severity') {
-                    // Group by category and severity
-                    anomalies.forEach(anomaly => {
-                      const category = getAnomalyCategory(anomaly);
-                      if (!categoryData[category]) {
-                        categoryData[category] = { high: 0, medium: 0, low: 0, total: 0 };
-                      }
-                      categoryData[category].total++;
-                      const level = getSeverityLevel(anomaly.severity);
-                      if (level === 'high') {
-                        categoryData[category].high++;
-                      } else if (level === 'medium') {
-                        categoryData[category].medium++;
-                      } else {
-                        categoryData[category].low++;
-                      }
-                    });
-                  } else {
-                    // Group by category and confirmation status
-                    anomalies.forEach(anomaly => {
-                      const category = getAnomalyCategory(anomaly);
-                      if (!categoryData[category]) {
-                        categoryData[category] = { confirmed: 0, rejected: 0, unreviewed: 0, total: 0 };
-                      }
-                      categoryData[category].total++;
-                      const status = reviewedAnomalies[anomaly.id];
-                      if (status === 'confirmed') {
-                        categoryData[category].confirmed++;
-                      } else if (status === 'rejected') {
-                        categoryData[category].rejected++;
-                      } else {
-                        categoryData[category].unreviewed++;
-                      }
-                    });
-                  }
-
-                  // Convert to sorted array
-                  const categories = Object.entries(categoryData)
-                    .sort((a, b) => b[1].total - a[1].total)
-                    .slice(0, 8); // Show top 8 categories
-
+                  const categories = categoryData;
                   const maxCount = Math.max(...categories.map(([, data]) => data.total));
 
                   return categories.length > 0 ? (

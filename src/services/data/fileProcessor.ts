@@ -2,6 +2,7 @@ import pako from 'pako';
 import type { AnomalyDataset } from '@/types/anomaly.types';
 import { SimplifiedDatasetSchema, FileUploadSchema } from './schemas';
 import { parseCSV, type ParsedCSVRow } from './csvParser';
+import { convertToAnomaly, sortAnomaliesByScore, createDatasetProfile } from '@/utils/anomalyConverter';
 
 export async function processDataFile(file: File): Promise<AnomalyDataset> {
   // Validate file
@@ -65,13 +66,10 @@ function processCSVData(csvContent: string): AnomalyDataset {
 
   const now = new Date().toISOString();
 
-  // Extract custom field names (all fields except the required ones)
-  const requiredFields = ['id', 'category', 'severity', 'anomaly_score', 'detection_method', 'ai_explanation', 'review_status', 'anomaly_notes'];
   const firstRow = rows[0];
   if (!firstRow) {
     throw new Error('CSV file contains no valid data rows');
   }
-  const customFieldNames = Object.keys(firstRow).filter(key => !requiredFields.includes(key));
 
   // Collect review data to pass back
   const reviewData: { reviewedAnomalies: Record<string, 'confirmed' | 'rejected'>, anomalyNotes: Record<string, string> } = {
@@ -79,7 +77,7 @@ function processCSVData(csvContent: string): AnomalyDataset {
     anomalyNotes: {}
   };
 
-  // Convert CSV rows to anomaly format
+  // Convert CSV rows to anomaly format using centralized converter
   const anomalies = rows.map((row: ParsedCSVRow) => {
     // Extract review status and notes if present
     if (row.review_status && row.review_status !== 'unreviewed') {
@@ -89,54 +87,19 @@ function processCSVData(csvContent: string): AnomalyDataset {
       reviewData.anomalyNotes[row.id] = row.anomaly_notes;
     }
 
-    // Extract custom fields
-    const customFields: Record<string, any> = {};
-    customFieldNames.forEach(field => {
-      if (row[field] !== undefined && row[field] !== '') {
-        customFields[field] = row[field];
-      }
-    });
-
-    return {
-      id: row.id,
-      subject_type: 'transaction' as const,
-      subject_id: row.id,
-      timestamp: now,
-      anomaly_types: ['point'] as any,
-      severity: row.severity === 'high' ? 0.9 : row.severity === 'medium' ? 0.6 : 0.3,
-      materiality: row.anomaly_score * 0.8,
-      unified_score: row.anomaly_score,
-      reason_codes: [{
-        code: row.category.toUpperCase().replace(/\s+/g, '_'),
-        text: row.ai_explanation
-      }],
-      explanations: {
-        shap_local: [],
-        feature_deltas: []
-      },
-      case: {
-        status: 'open' as const,
-        tags: [row.category, row.detection_method, row.severity]
-      },
-      // Store custom fields for display
-      customFields: Object.keys(customFields).length > 0 ? customFields : undefined
-    };
+    return convertToAnomaly(row, now);
   });
 
   // Sort anomalies by score (highest first)
-  anomalies.sort((a: any, b: any) => b.unified_score - a.unified_score);
+  const sortedAnomalies = sortAnomaliesByScore(anomalies);
 
   const dataset = {
     run_id: now,
-    dataset_profile: {
-      rows: rows.length * 200, // Estimate total records
-      columns: Object.keys(firstRow).length,
-      primary_keys: ['id'],
-      entity_keys: ['category'],
-      time_key: 'timestamp',
-      currency: 'USD'
-    },
-    anomalies,
+    dataset_profile: createDatasetProfile(
+      rows.length * 200, // Estimate total records
+      Object.keys(firstRow).length
+    ),
+    anomalies: sortedAnomalies,
     _index: new Map(anomalies.map((a: any, idx: number) => [a.id, idx]))
   } as AnomalyDataset;
 
@@ -167,44 +130,16 @@ function processJSONData(jsonString: string): AnomalyDataset {
 function convertSimplifiedToFull(simplified: any): AnomalyDataset {
   const now = new Date().toISOString();
 
-  // Map simplified anomalies to full format
-  const anomalies = simplified.anomalies.map((a: any) => ({
-    id: a.id,
-    subject_type: 'transaction' as const,
-    subject_id: a.id,
-    timestamp: now,
-    anomaly_types: ['point'] as any,
-    severity: a.severity === 'high' ? 0.9 : a.severity === 'medium' ? 0.6 : 0.3,
-    materiality: a.anomaly_score * 0.8,
-    unified_score: a.anomaly_score,
-    reason_codes: [{
-      code: a.category.toUpperCase().replace(/\s+/g, '_'),
-      text: a.ai_explanation
-    }],
-    explanations: {
-      shap_local: [],
-      feature_deltas: []
-    },
-    case: {
-      status: 'open' as const,
-      tags: [a.category, a.detection_method, a.severity]
-    }
-  }));
+  // Map simplified anomalies to full format using centralized converter
+  const anomalies = simplified.anomalies.map((a: any) => convertToAnomaly(a, now));
 
   // Sort anomalies by score (highest first)
-  anomalies.sort((a: any, b: any) => b.unified_score - a.unified_score);
+  const sortedAnomalies = sortAnomaliesByScore(anomalies);
 
   return {
     run_id: now,
-    dataset_profile: {
-      rows: simplified.total_records,
-      columns: 0,
-      primary_keys: ['id'],
-      entity_keys: ['category'],
-      time_key: 'timestamp',
-      currency: 'USD'
-    },
-    anomalies,
+    dataset_profile: createDatasetProfile(simplified.total_records, 0),
+    anomalies: sortedAnomalies,
     _index: new Map(anomalies.map((a: any, idx: number) => [a.id, idx]))
   } as AnomalyDataset;
 }
