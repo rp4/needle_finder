@@ -66,15 +66,29 @@ function processCSVData(csvContent: string): AnomalyDataset {
   const now = new Date().toISOString();
 
   // Extract custom field names (all fields except the required ones)
-  const requiredFields = ['id', 'category', 'severity', 'anomaly_score', 'detection_method', 'ai_explanation'];
+  const requiredFields = ['id', 'category', 'severity', 'anomaly_score', 'detection_method', 'ai_explanation', 'review_status', 'anomaly_notes'];
   const firstRow = rows[0];
   if (!firstRow) {
     throw new Error('CSV file contains no valid data rows');
   }
   const customFieldNames = Object.keys(firstRow).filter(key => !requiredFields.includes(key));
 
+  // Collect review data to pass back
+  const reviewData: { reviewedAnomalies: Record<string, 'confirmed' | 'rejected'>, anomalyNotes: Record<string, string> } = {
+    reviewedAnomalies: {},
+    anomalyNotes: {}
+  };
+
   // Convert CSV rows to anomaly format
   const anomalies = rows.map((row: ParsedCSVRow) => {
+    // Extract review status and notes if present
+    if (row.review_status && row.review_status !== 'unreviewed') {
+      reviewData.reviewedAnomalies[row.id] = row.review_status as 'confirmed' | 'rejected';
+    }
+    if (row.anomaly_notes) {
+      reviewData.anomalyNotes[row.id] = row.anomaly_notes;
+    }
+
     // Extract custom fields
     const customFields: Record<string, any> = {};
     customFieldNames.forEach(field => {
@@ -112,7 +126,7 @@ function processCSVData(csvContent: string): AnomalyDataset {
   // Sort anomalies by score (highest first)
   anomalies.sort((a: any, b: any) => b.unified_score - a.unified_score);
 
-  return {
+  const dataset = {
     run_id: now,
     dataset_profile: {
       rows: rows.length * 200, // Estimate total records
@@ -125,6 +139,11 @@ function processCSVData(csvContent: string): AnomalyDataset {
     anomalies,
     _index: new Map(anomalies.map((a: any, idx: number) => [a.id, idx]))
   } as AnomalyDataset;
+
+  // Attach review data to the dataset for restoration
+  (dataset as any)._reviewData = reviewData;
+
+  return dataset;
 }
 
 function processJSONData(jsonString: string): AnomalyDataset {

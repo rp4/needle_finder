@@ -11,9 +11,17 @@ import { SeverityBadge } from '@components/common/SeverityBadge';
 import { getAnomalyCategory, formatAnomalyId, getSeverityLevel, SEVERITY_THRESHOLDS } from '@/utils/anomalyUtils';
 
 export function Dashboard() {
-  const { dataset, hasData, loadDataset, getFilteredAnomalies } = useAnomalyStore();
+  const {
+    dataset,
+    hasData,
+    loadDataset,
+    getFilteredAnomalies,
+    reviewedAnomalies,
+    anomalyNotes,
+    setAnomalyReview,
+    setAnomalyNote
+  } = useAnomalyStore();
   const [selectedAnomaly, setSelectedAnomaly] = useState<Anomaly | null>(null);
-  const [reviewedAnomalies, setReviewedAnomalies] = useState<{[key: string]: 'confirmed' | 'rejected'}>({});
   const [filterMode, setFilterMode] = useState<'all' | 'confirmed' | 'high-severity' | 'unreviewed'>('all');
   const [distributionView, setDistributionView] = useState<'severity' | 'confirmed'>('severity');
   const [categoryFilter, setCategoryFilter] = useState<{
@@ -150,10 +158,7 @@ export function Dashboard() {
   };
 
   const handleReviewAnomaly = (anomalyId: string, status: 'confirmed' | 'rejected') => {
-    setReviewedAnomalies(prev => ({
-      ...prev,
-      [anomalyId]: status
-    }));
+    setAnomalyReview(anomalyId, status);
     setSelectedAnomaly(null);
   };
 
@@ -471,7 +476,25 @@ export function Dashboard() {
 
           {selectedAnomaly ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-600 mb-2">Reason Codes</p>
+                <div className="text-sm text-gray-700 leading-relaxed">
+                  {selectedAnomaly.reason_codes && selectedAnomaly.reason_codes.length > 0 ? (
+                    <ul className="space-y-1">
+                      {selectedAnomaly.reason_codes.map((reason, idx) => (
+                        <li key={idx} className="flex gap-2">
+                          <span className="text-xs font-medium text-indigo-600">{reason.code}:</span>
+                          <span className="text-xs">{reason.text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-xs text-gray-500">No reason codes available for this anomaly.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 mb-1">Anomaly ID</p>
                   <p className="text-sm font-medium text-gray-800 truncate" title={selectedAnomaly.id}>
@@ -500,33 +523,15 @@ export function Dashboard() {
                     ) || selectedAnomaly.model_votes?.[0]?.model || 'Multiple'}
                   </p>
                 </div>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <p className="text-xs text-gray-600 mb-2">Severity & Score</p>
-                <div className="flex items-center justify-between">
+                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-1">Severity</p>
                   <SeverityBadge severity={selectedAnomaly.severity} className="px-3 py-1 text-sm" />
-                  <span className="text-sm font-bold text-indigo-400">
-                    Score: {selectedAnomaly.unified_score.toFixed(3)}
-                  </span>
                 </div>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <p className="text-xs text-gray-600 mb-2">Reason Codes</p>
-                <div className="text-sm text-gray-700 leading-relaxed">
-                  {selectedAnomaly.reason_codes && selectedAnomaly.reason_codes.length > 0 ? (
-                    <ul className="space-y-1">
-                      {selectedAnomaly.reason_codes.map((reason, idx) => (
-                        <li key={idx} className="flex gap-2">
-                          <span className="text-xs font-medium text-indigo-600">{reason.code}:</span>
-                          <span className="text-xs">{reason.text}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-xs text-gray-500">No reason codes available for this anomaly.</p>
-                  )}
+                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                  <p className="text-xs text-gray-600 mb-1">Anomaly Score</p>
+                  <p className="text-lg font-bold text-indigo-600">
+                    {selectedAnomaly.unified_score.toFixed(3)}
+                  </p>
                 </div>
               </div>
 
@@ -570,6 +575,20 @@ export function Dashboard() {
                   </div>
                 </div>
               )}
+
+              {/* Anomaly Notes */}
+              <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <p className="text-xs text-gray-600 mb-2">Anomaly Notes</p>
+                <textarea
+                  className="w-full px-2 py-1.5 text-sm text-gray-700 bg-white border border-gray-300 rounded focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
+                  rows={3}
+                  placeholder="Add notes about this anomaly..."
+                  value={anomalyNotes[selectedAnomaly.id] || ''}
+                  onChange={(e) => {
+                    setAnomalyNote(selectedAnomaly.id, e.target.value);
+                  }}
+                />
+              </div>
 
               <div className="flex gap-2 mt-2">
                 <button

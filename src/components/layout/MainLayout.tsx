@@ -7,7 +7,7 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const { hasData, getFilteredAnomalies } = useAnomalyStore();
+  const { hasData, getFilteredAnomalies, reviewedAnomalies, anomalyNotes } = useAnomalyStore();
 
   const handleExport = () => {
     const anomalies = getFilteredAnomalies();
@@ -27,7 +27,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     const rows: string[] = [];
 
     // Header row - include both required and custom fields
-    const headers = ['id', 'category', 'severity', 'anomaly_score', 'detection_method', 'ai_explanation'];
+    const headers = ['id', 'category', 'severity', 'anomaly_score', 'detection_method', 'ai_explanation', 'review_status', 'anomaly_notes'];
 
     // Add any custom fields from the first anomaly (if exists)
     const firstAnomaly = anomalies[0];
@@ -39,6 +39,9 @@ export function MainLayout({ children }: MainLayoutProps) {
 
     // Data rows
     anomalies.forEach(anomaly => {
+      const reviewStatus = reviewedAnomalies[anomaly.id] || 'unreviewed';
+      const notes = anomalyNotes[anomaly.id] || '';
+
       const row = [
         escapeCSV(anomaly.id),
         escapeCSV(anomaly.reason_codes?.[0]?.code?.replace(/_/g, ' ').toLowerCase()
@@ -50,12 +53,14 @@ export function MainLayout({ children }: MainLayoutProps) {
            'Autoencoder', 'Statistical Z-Score', 'Time Series Decomposition', 'Ensemble Method']
           .includes(tag)
         ) || 'Ensemble Method'),
-        escapeCSV(anomaly.reason_codes?.[0]?.text || 'Anomaly detected based on statistical analysis')
+        escapeCSV(anomaly.reason_codes?.[0]?.text || 'Anomaly detected based on statistical analysis'),
+        escapeCSV(reviewStatus),
+        escapeCSV(notes)
       ];
 
       // Add custom field values
       if (anomaly.customFields) {
-        headers.slice(6).forEach(header => {
+        headers.slice(8).forEach(header => {
           row.push(escapeCSV(anomaly.customFields?.[header]));
         });
       }

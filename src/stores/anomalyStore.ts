@@ -16,15 +16,19 @@ interface AnomalyState {
   // Data
   dataset: AnomalyDataset | null;
   hasData: boolean;
-  
+
   // Filters
   filters: Filters;
-  
+
   // UI State
   selectedAnomalyId: string | null;
   viewMode: 'explore' | 'investigate' | 'report';
   piiMasked: boolean;
-  
+
+  // Review Data
+  reviewedAnomalies: {[key: string]: 'confirmed' | 'rejected'};
+  anomalyNotes: {[key: string]: string};
+
   // Actions
   loadDataset: (data: AnomalyDataset) => void;
   clearDataset: () => void;
@@ -33,7 +37,9 @@ interface AnomalyState {
   selectAnomaly: (id: string | null) => void;
   setViewMode: (mode: 'explore' | 'investigate' | 'report') => void;
   togglePiiMasking: () => void;
-  
+  setAnomalyReview: (id: string, status: 'confirmed' | 'rejected') => void;
+  setAnomalyNote: (id: string, note: string) => void;
+
   // Computed
   getFilteredAnomalies: () => Anomaly[];
   getAnomalyById: (id: string) => Anomaly | undefined;
@@ -50,23 +56,33 @@ export const useAnomalyStore = create<AnomalyState>()(
         selectedAnomalyId: null,
         viewMode: 'explore',
         piiMasked: true,
-        
+        reviewedAnomalies: {},
+        anomalyNotes: {},
+
         // Actions
         loadDataset: (data) => {
-          set({ 
-            dataset: data, 
+          // Extract review data if present
+          const reviewData = (data as any)._reviewData;
+
+          set({
+            dataset: data,
             hasData: true,
             filters: {},
-            selectedAnomalyId: null
+            selectedAnomalyId: null,
+            // Restore review data if present in the uploaded file
+            reviewedAnomalies: reviewData?.reviewedAnomalies || {},
+            anomalyNotes: reviewData?.anomalyNotes || {}
           });
         },
         
         clearDataset: () => {
-          set({ 
-            dataset: null, 
+          set({
+            dataset: null,
             hasData: false,
             filters: {},
-            selectedAnomalyId: null
+            selectedAnomalyId: null,
+            reviewedAnomalies: {},
+            anomalyNotes: {}
           });
         },
         
@@ -91,7 +107,19 @@ export const useAnomalyStore = create<AnomalyState>()(
         togglePiiMasking: () => {
           set((state) => ({ piiMasked: !state.piiMasked }));
         },
-        
+
+        setAnomalyReview: (id, status) => {
+          set((state) => ({
+            reviewedAnomalies: { ...state.reviewedAnomalies, [id]: status }
+          }));
+        },
+
+        setAnomalyNote: (id, note) => {
+          set((state) => ({
+            anomalyNotes: { ...state.anomalyNotes, [id]: note }
+          }));
+        },
+
         // Computed
         getFilteredAnomalies: () => {
           const state = get();
@@ -163,7 +191,9 @@ export const useAnomalyStore = create<AnomalyState>()(
         partialize: (state) => ({
           filters: state.filters,
           viewMode: state.viewMode,
-          piiMasked: state.piiMasked
+          piiMasked: state.piiMasked,
+          reviewedAnomalies: state.reviewedAnomalies,
+          anomalyNotes: state.anomalyNotes
         })
       }
     )
