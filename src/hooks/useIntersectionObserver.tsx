@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface UseIntersectionObserverOptions {
   threshold?: number;
@@ -18,7 +18,9 @@ export function useIntersectionObserver<T extends HTMLElement>(
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsIntersecting(entry.isIntersecting);
+        if (entry) {
+          setIsIntersecting(entry.isIntersecting);
+        }
       },
       { threshold, rootMargin }
     );
@@ -36,19 +38,19 @@ export function useIntersectionObserver<T extends HTMLElement>(
 }
 
 // Usage for lazy rendering components
-export function LazyRender<T extends HTMLElement>({
+export function LazyRender({
   children,
-  placeholder = <div style={{ height: '100px' }} />,
+  placeholder,
   rootMargin = '50px'
 }: {
   children: React.ReactNode;
   placeholder?: React.ReactNode;
   rootMargin?: string;
 }) {
-  const [ref, isVisible] = useIntersectionObserver<T>({ rootMargin });
+  const [ref, isVisible] = useIntersectionObserver<HTMLDivElement>({ rootMargin });
 
   return (
-    <div ref={ref as any}>
+    <div ref={ref}>
       {isVisible ? children : placeholder}
     </div>
   );
