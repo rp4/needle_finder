@@ -61,21 +61,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true
-      }
-    },
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'icons': ['lucide-react'],
-          'vendor': ['@tanstack/react-virtual', 'zustand', 'clsx', 'react-dropzone']
-        }
-      }
-    }
+    minify: 'esbuild',
+    chunkSizeWarningLimit: 1000
   }
 })
