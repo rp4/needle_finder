@@ -70,36 +70,10 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Split vendor chunks for better caching
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'react-vendor';
-            }
-            if (id.includes('lucide-react')) {
-              return 'icons';
-            }
-            if (id.includes('zustand')) {
-              return 'state';
-            }
-            if (id.includes('pako') || id.includes('jszip')) {
-              return 'compression';
-            }
-            if (id.includes('@tanstack')) {
-              return 'tanstack';
-            }
-            if (id.includes('zod')) {
-              return 'validation';
-            }
-            return 'vendor';
-          }
-          // Split feature modules
-          if (id.includes('src/services')) {
-            return 'services';
-          }
-          if (id.includes('src/utils')) {
-            return 'utils';
-          }
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'icons': ['lucide-react'],
+          'vendor': ['@tanstack/react-virtual', 'zustand', 'clsx', 'react-dropzone']
         }
       }
     }
