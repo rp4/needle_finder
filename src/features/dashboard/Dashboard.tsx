@@ -288,7 +288,7 @@ export function Dashboard() {
             tooltip: "Work with your own anomalies"
           },
           {
-            label: "Try with Sample Data",
+            label: "Try Demo Now",
             variant: "secondary",
             tooltip: "Instantly load sample data to explore all the features",
             onClick: loadMockData

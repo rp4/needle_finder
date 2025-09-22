@@ -108,10 +108,10 @@ export function LandingPage({
   return (
     <div className={`flex items-center justify-center min-h-[60vh] ${className}`}>
       <div
-        className={`w-full max-w-2xl p-12 border-2 border-dashed rounded-xl transition-all ${
+        className={`w-full max-w-2xl p-12 rounded-xl transition-all ${
           isDragging
-            ? 'border-indigo-500 bg-indigo-500/10'
-            : 'border-gray-300 bg-white/70 backdrop-blur-sm hover:border-indigo-400 shadow-lg'
+            ? 'bg-indigo-500/10'
+            : 'bg-white/70 backdrop-blur-sm shadow-lg'
         } ${containerClassName}`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
