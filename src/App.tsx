@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { MainLayout } from '@components/layout/MainLayout';
 import { PrivacyGuard } from '@components/common/PrivacyGuard';
 import { ErrorBoundary } from '@components/common/ErrorBoundary';
@@ -39,6 +40,7 @@ function App() {
           </MainLayout>
         </PrivacyGuard>
       </Router>
+      <Analytics />
     </ErrorBoundary>
   );
 }
