@@ -10,6 +10,13 @@ import { LandingPage } from '@/components/LandingPage';
 import { SeverityBadge } from '@components/common/SeverityBadge';
 import { getAnomalyCategory, formatAnomalyId, getSeverityLevel, SEVERITY_THRESHOLDS } from '@/utils/anomalyUtils';
 
+// Decode HTML entities for display
+function decodeHtmlEntities(text: string): string {
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = text;
+  return textarea.value;
+}
+
 export function Dashboard() {
   const {
     dataset,
@@ -168,7 +175,7 @@ export function Dashboard() {
         timestamp: row.timestamp || new Date().toISOString(),
         reviewed: false,
         reason_codes: [{
-          code: row.detection_method || 'Unknown',
+          code: row.category || 'Unknown',
           text: row.ai_explanation || 'No explanation available'
         }],
         customFields: {
@@ -487,7 +494,7 @@ export function Dashboard() {
                       {formatAnomalyId(anomaly.id)}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">
-                      {getAnomalyCategory(anomaly)}
+                      {decodeHtmlEntities(getAnomalyCategory(anomaly))}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <SeverityBadge severity={anomaly.severity} />
@@ -537,8 +544,8 @@ export function Dashboard() {
                     <ul className="space-y-1">
                       {selectedAnomaly.reason_codes.map((reason, idx) => (
                         <li key={idx} className="flex gap-2">
-                          <span className="text-xs font-medium text-indigo-600">{reason.code}:</span>
-                          <span className="text-xs">{reason.text}</span>
+                          <span className="text-xs font-medium text-indigo-600">{decodeHtmlEntities(reason.code)}:</span>
+                          <span className="text-xs">{decodeHtmlEntities(reason.text)}</span>
                         </li>
                       ))}
                     </ul>
@@ -564,17 +571,18 @@ export function Dashboard() {
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 mb-1">Category</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {getAnomalyCategory(selectedAnomaly)}
+                    {decodeHtmlEntities(getAnomalyCategory(selectedAnomaly))}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                   <p className="text-xs text-gray-600 mb-1">Detection Method</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {selectedAnomaly.case?.tags?.find(tag =>
+                    {decodeHtmlEntities(selectedAnomaly.customFields?.detection_method ||
+                     selectedAnomaly.case?.tags?.find(tag =>
                       ['Isolation Forest', 'Local Outlier Factor', 'One-Class SVM', 'DBSCAN',
                        'Autoencoder', 'Statistical Z-Score', 'Time Series Decomposition', 'Ensemble Method']
                       .includes(tag)
-                    ) || selectedAnomaly.model_votes?.[0]?.model || 'Multiple'}
+                    ) || selectedAnomaly.model_votes?.[0]?.model || 'Multiple')}
                   </p>
                 </div>
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
@@ -615,14 +623,14 @@ export function Dashboard() {
                     {Object.entries(selectedAnomaly.customFields).map(([key, value]) => (
                       <div key={key} className="flex justify-between items-center">
                         <span className="text-xs text-gray-600">
-                          {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {decodeHtmlEntities(key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()))}
                         </span>
                         <span className="text-xs font-medium text-indigo-400">
                           {typeof value === 'number'
                             ? value.toFixed(2)
                             : value === null || value === undefined
                             ? '-'
-                            : String(value)}
+                            : decodeHtmlEntities(String(value))}
                         </span>
                       </div>
                     ))}
