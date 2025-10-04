@@ -8,15 +8,10 @@ export interface ParsedCSVRow {
   [key: string]: any; // Custom fields
 }
 
-// Sanitize string values to prevent XSS attacks
+// React automatically escapes values in JSX, so we don't need manual sanitization
+// that would cause double-encoding issues with special characters like &
 function sanitizeValue(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-    .replace(/\//g, '&#x2F;'); // Also escape forward slash for safety
+  return value;
 }
 
 export function parseCSV(csvContent: string): ParsedCSVRow[] {
