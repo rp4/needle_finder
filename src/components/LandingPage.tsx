@@ -43,6 +43,7 @@ export interface LandingPageConfig {
     href: string;
     title?: string;
     target?: string;
+    visible?: boolean;
   }[];
 
   // Styling
@@ -256,18 +257,20 @@ export function LandingPage({
           {/* Footer links */}
           {footerLinks.length > 0 && (
             <div className="flex items-center justify-center gap-6 mt-8">
-              {footerLinks.map((link, idx) => (
-                <a
-                  key={idx}
-                  href={link.href}
-                  target={link.target || '_blank'}
-                  rel="noopener noreferrer"
-                  className="text-gray-600 hover:text-gray-900 transition-all hover:scale-110"
-                  title={link.title}
-                >
-                  {link.icon}
-                </a>
-              ))}
+              {footerLinks
+                .filter(link => link.visible !== false)
+                .map((link, idx) => (
+                  <a
+                    key={idx}
+                    href={link.href}
+                    target={link.target || '_blank'}
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-gray-900 transition-all hover:scale-110"
+                    title={link.title}
+                  >
+                    {link.icon}
+                  </a>
+                ))}
             </div>
           )}
         </div>
